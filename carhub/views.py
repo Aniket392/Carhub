@@ -20,7 +20,9 @@ def Home(request):
 
 def UserDashboard(request, pk):
     if request.user.id == pk or request.user.is_superuser:
-        return HttpResponse("pk")
+        userData = list(User.objects.filter(id = pk).values('username', 'first_name', 'last_name', 'email', 'userproxy__dl', 'userproxy__is_validated'))
+        order = list(Order.objects.filter(userid__id = pk).order_by('bookingDate'))
+        return JsonResponse({'user': userData, 'order':order})
     else:
         return HttpResponseForbidden('Not authorized to access this page.')
 
