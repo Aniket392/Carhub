@@ -49,6 +49,7 @@ class Order(timestamp):
     orderDateFrom =  models.DateTimeField(default = datetime.now())
     orderDateExpire =  models.DateTimeField(default = datetime.now()+ timedelta(hours=1))
     totalOrderCost = models.PositiveIntegerField()
+    bookingDate = models.DateTimeField(default = datetime.now())
     status = models.CharField(max_length=3, choices=ORDER_STATUS, default='BKD')
 
     def __str__(self):
