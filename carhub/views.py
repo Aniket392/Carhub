@@ -31,15 +31,17 @@ def Signin(request):
     if request.method == "POST":
         if request.user.is_authenticated:
             return JsonResponse({"login":"Already LoggedIn"})
-        username = request.POST['username']
-        password = request.POST['password']
+        email = request.POST.get('email', None)
+        password = request.POST.get('password', None)
 
+        try:
+            username = User.objects.get(email = email).username
+        except:
+            return HttpResponseNotFound("Email Not Found")
         user = authenticate(username = username, password = password)
         if user is not None:    
             login(request, user)
-            # return redirect("/")
             return JsonResponse({"login":"successful"})
-            # return redirect('base')
         else:
             request.session['invalid_user'] = 1
     return HttpResponse('Show signin form')
@@ -55,18 +57,18 @@ def Signout(request):
 @csrf_exempt
 def Signup(request):
     if request.method == "POST":
-        username = request.POST['username']
-        email = request.POST['password']
-        password = request.POST['password']
-
-        try:
-            user = User.objects.get(email=email)
-            return HttpResponse("Already Exists")
-        except:
-            user = User.objects.create_user(username=username, password= password, email=email)
-            user.save()
-            login(request, user)
-            return HttpResponse("Created User")
+        username = request.POST.get('username', None)
+        email = request.POST.get('email', None)
+        password = request.POST.get('password', None)
+        if username and email and password:
+            try:
+                user = User.objects.get(email=email)
+                return HttpResponse("Already Exists")
+            except:
+                user = User.objects.create_user(username=username, password= password, email=email)
+                user.save()
+                login(request, user)
+                return HttpResponse("Created User")
     return HttpResponse('Show sign Up form')
 
 @csrf_exempt
