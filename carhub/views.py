@@ -52,7 +52,7 @@ def Signout(request):
     if request.user.is_authenticated:
         logout(request)
         return redirect("/")
-    return HttpResponse("Not logged in")
+    return HttpResponse("Not logged in", status = 401)
 
 
 @csrf_exempt
