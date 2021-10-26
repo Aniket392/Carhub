@@ -58,6 +58,10 @@ CORS_ORIGIN_WHITELIST = [
 ]
 ROOT_URLCONF = 'backend.urls'
 
+CORS_ORIGIN_WHITELIST = [
+    'http://localhost:3000',
+]
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
