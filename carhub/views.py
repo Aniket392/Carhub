@@ -30,7 +30,7 @@ def UserDashboard(request, pk):
 def Signin(request):
     if request.method == "POST":
         if request.user.is_authenticated:
-            return JsonResponse({"login":"Already LoggedIn"})
+            return JsonResponse({"login":"Already LoggedIn"})   # Change to be done
         email = request.POST.get('email', None)
         password = request.POST.get('password', None)
 
@@ -44,6 +44,7 @@ def Signin(request):
             return JsonResponse({"login":"successful"})
         else:
             request.session['invalid_user'] = 1
+            return HttpResponse("Unauthorized", status = 401)
     return HttpResponse('Show signin form')
 
 @csrf_exempt
