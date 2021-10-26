@@ -19,12 +19,13 @@ def Home(request):
     return JsonResponse(city, safe=False)
 
 def UserDashboard(request, pk):
-    if request.user.id == pk or request.user.is_superuser:
-        userData = list(User.objects.filter(id = pk).values('username', 'first_name', 'last_name', 'email', 'userproxy__dl', 'userproxy__is_validated'))
-        order = list(Order.objects.filter(userid__id = pk).order_by('bookingDate'))
-        return JsonResponse({'user': userData, 'order':order})
-    else:
-        return HttpResponseForbidden('Not authorized to access this page.')
+    if request.method == "GET":
+        if request.user.id == pk or request.user.is_superuser:
+            userData = list(User.objects.filter(id = pk).values('username', 'first_name', 'last_name', 'email', 'userproxy__dl', 'userproxy__is_validated'))
+            order = list(Order.objects.filter(userid__id = pk).order_by('bookingDate'))
+            return JsonResponse({'user': userData, 'order':order}, status = 200)
+        else:
+            return JsonResponse({'message': "Not authorized to access this page."}, status = 401)
 
 @csrf_exempt
 def Signin(request):
@@ -37,22 +38,22 @@ def Signin(request):
         try:
             username = User.objects.get(email = email).username
         except:
-            return HttpResponseNotFound("Email Not Found")
+            return JsonResponse({'message': "Email Not Found."}, status = 401)
         user = authenticate(username = username, password = password)
         if user is not None:    
             login(request, user)
             return JsonResponse({"login":"successful"})
         else:
             request.session['invalid_user'] = 1
-            return HttpResponse("Unauthorized", status = 401)
-    return HttpResponse('Show signin form')
+            return JsonResponse({'message': "Not authorized to access this page."}, status = 401)
+    return JsonResponse({'message': "Show SignIn Form."}, status = 200)
 
 @csrf_exempt
 def Signout(request):
     if request.user.is_authenticated:
         logout(request)
         return redirect("/")
-    return HttpResponse("Not logged in", status = 401)
+    return JsonResponse({'message': "Not Logged In."}, status = 401)
 
 
 @csrf_exempt
@@ -64,13 +65,13 @@ def Signup(request):
         if username and email and password:
             try:
                 user = User.objects.get(email=email)
-                return HttpResponse("Already Exists")
+                return JsonResponse({'message': "Already Exists."}, status = 403)
             except:
                 user = User.objects.create_user(username=username, password= password, email=email)
                 user.save()
                 login(request, user)
-                return HttpResponse("Created User")
-    return HttpResponse('Show sign Up form')
+                return JsonResponse({'success': True}, status = 201)
+    return JsonResponse({'message': "Show SignUp Form."}, status = 200)
 
 @csrf_exempt
 def RentCar(request):   
@@ -85,7 +86,7 @@ def RentCar(request):
 
             try:
                 car = Car.objects.get(brand=brandname, modelName = model, user = user, year = year, category = category, price=price)
-                return HttpResponse("Already Exists")
+                return JsonResponse({'message': "Already Exists."}, status = 403)
             except:
                 form = RentCarForm(request.POST or None, request.FILES or None)
                 if form.is_valid():
@@ -96,7 +97,7 @@ def RentCar(request):
                     car.created_at = timezone.now()
                     car.updated_at = timezone.now()
                     car.save()
-                    return HttpResponse("Added Car")
+                    return JsonResponse({'message': "Added Car."}, status = 201)
         else:
             return redirect('/signin')
     else:
@@ -109,7 +110,7 @@ def protected_media(request, file):
         response = FileResponse(document.photo)
         return response
     else:
-        return HttpResponseForbidden('Not authorized to access this media.')
+        return JsonResponse({'message': "Not authorized to access this media."}, status = 401)
 
 @csrf_exempt
 def RideCar(request, city=None):
@@ -141,7 +142,7 @@ def Book(request, carid):
         if request.method == 'POST':
             fromDate = request.POST.get('from')
             toDate = request.POST.get('to')
-            # Take Date Input
+            # Take Date Input -- Done
             # Check DL(check validated user) At the time of signup check whether he has uploaded everything
             # Check Balance
 
