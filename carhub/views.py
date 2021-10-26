@@ -147,3 +147,9 @@ def Book(request, carid):
 
             
             return 
+
+def test(request):
+    if request.user.is_authenticated:
+        return JsonResponse({'success':True})
+    else:
+        return JsonResponse({'success':False})
