@@ -62,7 +62,7 @@ def Signin(request):
         user = authenticate(username = username, password = password)
         if user is not None:    
             login(request, user)
-            return JsonResponse({"login":"successful"})
+            return JsonResponse({"login":"successful", "userid":user.id})
         else:
             request.session['invalid_user'] = 1
             return JsonResponse({'message': "Not authorized to access this page."}, status = 401)
@@ -72,7 +72,7 @@ def Signin(request):
 def Signout(request):
     if request.user.is_authenticated:
         logout(request)
-        return redirect("/")
+        return JsonResponse({'message': "Redirect to Home."}, status = 302)
     return JsonResponse({'message': "Not Logged In."}, status = 401)
 
 
@@ -119,7 +119,7 @@ def RentCar(request):
                     car.save()
                     return JsonResponse({'message': "Added Car."}, status = 201)
         else:
-            return redirect('/signin')
+            return JsonResponse({'message': "Redirect To SignIn."}, status = 302)
     else:
         return render(request, 'index.html')
 
@@ -151,7 +151,7 @@ def RideCar(request, city=None):
             city_data = list(City.objects.values('id', 'name'))
             return JsonResponse({'data': city_data})
     else:
-        return redirect('/signin')
+        return JsonResponse({'message': 'Redirect To Sign in'}, status = 302)
 
 def Book(request, carid):
     if request.user.is_authenticated:
