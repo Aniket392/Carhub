@@ -143,8 +143,8 @@ def RideCar(request, city=None):
             toDate = timezone.now()+timedelta(days=1)
         if city is not None:
             car_all = Order.objects.filter(car__city__id = city)
-            car_notbooked = Car.objects.filter(city__id = city).exclude(car_detail__in=car_all).values()
-            car_notbooked_date = Car.objects.filter(city__id = city,  car_detail__orderDateFrom__lt=fromDate, car_detail__orderDateExpire__gt=toDate).values()
+            car_notbooked = Car.objects.filter(city__id = city).exclude(car_detail__in=car_all).values('id', 'brand', 'modelName', 'year', 'category__name', 'price', 'user_id', 'city_id', 'photo', 'rc')
+            car_notbooked_date = Car.objects.filter(city__id = city,  car_detail__orderDateFrom__lt=fromDate, car_detail__orderDateExpire__gt=toDate).values('id', 'brand', 'modelName', 'year', 'category__name', 'price', 'user_id', 'city_id', 'photo', 'rc')
             car_data = list(car_notbooked | car_notbooked_date)
             return JsonResponse({'data': car_data})
         else:
