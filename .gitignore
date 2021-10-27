@@ -2,3 +2,4 @@ minor-project/
 .env
 __pycache__/
 migrations/
+media/
