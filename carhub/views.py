@@ -6,26 +6,46 @@ from django.contrib.auth.models import User
 from django.views.decorators.csrf import csrf_exempt
 from carhub.models import *
 from carhub.forms import *
+from carhub.utils import CreationDataSaver
 from django.utils import timezone
 import os
 from backend import settings
 from django.contrib.auth.decorators import login_required
 
-# Create your views here.
+
 @csrf_exempt
 def Home(request):
     city = list(City.objects.values())
     date = datetime.now()
     return JsonResponse(city, safe=False)
 
+@csrf_exempt
 def UserDashboard(request, pk):
-    if request.method == "GET":
-        if request.user.id == pk or request.user.is_superuser:
-            userData = list(User.objects.filter(id = pk).values('username', 'first_name', 'last_name', 'email', 'userproxy__dl', 'userproxy__is_validated'))
+    if request.user.id == pk or request.user.is_superuser:
+        if request.method == "GET":
+            userData = list(User.objects.filter(id = pk).values('username', 'first_name', 'last_name', 'email', 'userproxy__dl', 'userproxy__is_valid_renter', 'userproxy__is_valid_rider'))
             order = list(Order.objects.filter(userid__id = pk).order_by('bookingDate'))
             return JsonResponse({'user': userData, 'order':order}, status = 200)
-        else:
-            return JsonResponse({'message': "Not authorized to access this page."}, status = 401)
+        elif request.method == "POST":
+            print(request.FILES)
+            if request.FILES is not None:
+                try:
+                    userproxy = UserProxy.objects.get(user = request.user)
+                    userproxy.dl = request.FILES['file']
+                    userproxy.is_valid_rider = False
+                    userproxy = CreationDataSaver(userproxy)
+                    userproxy.save()
+                    message = 'Updated'
+                except UserProxy.DoesNotExist:
+                    userproxy = UserProxy(user = request.user, is_valid_renter = False, is_valid_rider = False, dl = request.FILES['file'])
+                    userproxy = CreationDataSaver(userproxy)
+                    userproxy.save()
+                    message = 'Uploaded'
+                return JsonResponse({'message':'DL {message}. We will review and get back to you'.format(message = message)}, status = 201)
+            else:
+                return JsonResponse({'message':'No File Uploaded'}, status = 400)
+    else:
+        return JsonResponse({'message': "Not authorized to access this page."}, status = 401)
 
 @csrf_exempt
 def Signin(request):
@@ -128,7 +148,7 @@ def RideCar(request, city=None):
             car_data = list(car_notbooked | car_notbooked_date)
             return JsonResponse({'data': car_data})
         else:
-            city_data = list(City.objects.values('name'))
+            city_data = list(City.objects.values('id', 'name'))
             return JsonResponse({'data': city_data})
     else:
         return redirect('/signin')

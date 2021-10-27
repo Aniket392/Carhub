@@ -2,6 +2,7 @@ from django.contrib.auth.models import User
 from django.db import models
 from datetime import datetime
 from datetime import timedelta
+# from cloudinary.models import CloudinaryField
 
 class timestamp(models.Model):
     created_at = models.DateTimeField(default = datetime.now())
@@ -33,7 +34,9 @@ class Car(timestamp):
     price = models.PositiveIntegerField()
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     city = models.ForeignKey(City, on_delete=models.CASCADE)
-    photo = models.ImageField(upload_to='cars')
+    # photo = CloudinaryField('img')
+    photo = models.ImageField(upload_to = 'cars')
+    rc = models.ImageField(upload_to = 'rc')
 
     def __str__(self):
         return str(self.brand + self.modelName)
@@ -57,5 +60,9 @@ class Order(timestamp):
 
 class UserProxy(timestamp):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    is_validated = models.BooleanField(default=False)
-    dl = models.ImageField(upload_to='dl')
+    is_valid_renter = models.BooleanField(default=False)
+    is_valid_rider = models.BooleanField(default=False)
+    dl = models.ImageField(upload_to='dl', blank = True)
+
+    def __str__(self):
+        return str(self.user.username)
