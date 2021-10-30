@@ -1,17 +1,24 @@
+import os
+from backend import settings
 from django.core.checks import messages
 from django.http.response import FileResponse, HttpResponse, HttpResponseForbidden, HttpResponseNotFound, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.models import User
 from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.decorators import login_required
+from django.core.mail import EmailMessage
+from django.utils.encoding import force_bytes, force_text
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.contrib.sites.shortcuts import get_current_site
+from django.template.loader import render_to_string
+from django.db.models import Q
+from django.utils import timezone
+
 from carhub.models import *
+from carhub.token import account_activation_token
 from carhub.forms import *
 from carhub.utils import CreationDataSaver
-from django.utils import timezone
-import os
-from backend import settings
-from django.contrib.auth.decorators import login_required
-
 
 @csrf_exempt
 def Home(request):
@@ -84,14 +91,42 @@ def Signup(request):
         password = request.POST.get('password', None)
         if username and email and password:
             try:
-                user = User.objects.get(email=email)
+                user = User.objects.filter(Q(email=email) | Q(username=username))[0]
                 return JsonResponse({'message': "Already Exists."}, status = 403)
             except:
                 user = User.objects.create_user(username=username, password= password, email=email)
+                user.is_active = False
                 user.save()
+                current_site = get_current_site(request)
+                mail_subject = 'Activate your Carhub account.'
+                message = render_to_string('acc_active_email.html', {
+                    'user': user,
+                    'domain': current_site.domain,
+                    'uid':urlsafe_base64_encode(force_bytes(user.pk)),
+                    'token':account_activation_token.make_token(user),
+                })
+                to_email = email
+                email = EmailMessage(
+                            mail_subject, message, to=[to_email]
+                )
+                email.send()
                 login(request, user)
-                return JsonResponse({'success': True}, status = 201)
+                return JsonResponse({'Mail': "Sent"}, status = 201)
     return JsonResponse({'message': "Show SignUp Form."}, status = 200)
+
+def activate(request, uidb64, token):
+    try:
+        uid = force_text(urlsafe_base64_decode(uidb64))
+        user = User.objects.get(pk=uid)
+    except(TypeError, ValueError, OverflowError, User.DoesNotExist):
+        user = None
+    if user is not None and account_activation_token.check_token(user, token):
+        user.is_active = True
+        user.save()
+        login(request, user)
+        return HttpResponse('Thank you for your email confirmation. Now you can login your account.')
+    else:
+        return HttpResponse('Activation link is invalid!')
 
 @csrf_exempt
 def RentCar(request):   

@@ -1,5 +1,5 @@
 from django.urls import path
-from django.urls.conf import include
+from django.urls.conf import include, re_path
 from carhub import views
 
 urlpatterns = [
@@ -9,6 +9,7 @@ urlpatterns = [
 
     path('media/cars/<str:file>', views.protected_media, name="protected_media"),
     path('signup', views.Signup, name = "signup"),
+    path('activate/<uidb64>/<token>/', views.activate, name='activate'),
     path('signin', views.Signin, name = "signin"),
     path('signout', views.Signout, name = "signout"),
 
