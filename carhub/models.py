@@ -2,7 +2,7 @@ from django.contrib.auth.models import User
 from django.db import models
 from datetime import datetime
 from datetime import timedelta
-# from cloudinary.models import CloudinaryField
+from cloudinary.models import CloudinaryField
 
 class timestamp(models.Model):
     created_at = models.DateTimeField(default = datetime.now())
@@ -34,9 +34,10 @@ class Car(timestamp):
     price = models.PositiveIntegerField()
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     city = models.ForeignKey(City, on_delete=models.CASCADE)
-    # photo = CloudinaryField('img')
-    photo = models.ImageField(upload_to = 'cars')
-    rc = models.ImageField(upload_to = 'rc')
+    photo = CloudinaryField('img', default = None)
+    rc = CloudinaryField('rc', default = None)
+    # photo = models.ImageField(upload_to = 'cars')
+    # rc = models.ImageField(upload_to = 'rc')
 
     def __str__(self):
         return str(self.brand + self.modelName)

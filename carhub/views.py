@@ -144,6 +144,7 @@ def RentCar(request):
                 return JsonResponse({'message': "Already Exists."}, status = 403)
             except:
                 form = RentCarForm(request.POST or None, request.FILES or None)
+                print(form.errors)
                 if form.is_valid():
                     car = form.save(commit=False)
                     car.user = request.user
@@ -181,6 +182,12 @@ def RideCar(request, city=None):
             car_notbooked = Car.objects.filter(city__id = city).exclude(car_detail__in=car_all).values('id', 'brand', 'modelName', 'year', 'category__name', 'price', 'user_id', 'city_id', 'photo', 'rc')
             car_notbooked_date = Car.objects.filter(city__id = city,  car_detail__orderDateFrom__lt=fromDate, car_detail__orderDateExpire__gt=toDate).values('id', 'brand', 'modelName', 'year', 'category__name', 'price', 'user_id', 'city_id', 'photo', 'rc')
             car_data = list(car_notbooked | car_notbooked_date)
+
+            # For Taking out URL from object
+            for car in car_data:
+                car['photo'] = car['photo'].url
+                car['rc'] = car['rc'].url
+
             return JsonResponse({'data': car_data})
         else:
             city_data = list(City.objects.values('id', 'name'))
