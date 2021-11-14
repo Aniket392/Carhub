@@ -34,8 +34,8 @@ def UserDashboard(request, pk):
             order = list(Order.objects.filter(userid__id = pk).order_by('bookingDate'))
             return JsonResponse({'user': userData, 'order':order}, status = 200)
         elif request.method == "POST":
-            print(request.FILES)
-            if request.FILES is not None:
+            # print( == None)
+            if request.FILES.get('file', None) is not None:
                 try:
                     userproxy = UserProxy.objects.get(user = request.user)
                     userproxy.dl = request.FILES['file']
