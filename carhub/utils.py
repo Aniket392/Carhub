@@ -44,7 +44,8 @@ class DrivingLicense():
         return dl_no
     
   def is_valid(self):
-    if len(self.license_number()) == 15:
+    lc = self.license_number()
+    if lc and len(lc) == 15:
       return True
     return False
 
