@@ -4,11 +4,18 @@ from django.core.mail import message
 import pytesseract
 from pytesseract import Output
 from django.utils import timezone
+import numpy as np
+import urllib.request
 class DrivingLicense():
   def __init__(self, location):
-    self.img = cv2.imread(location)
-    self.img = cv2.cvtColor(self.img, cv2.COLOR_BGR2GRAY)
-    self.img = cv2.resize(self.img, None, fx=2, fy=2)
+    with urllib.request.urlopen(location) as url:
+      s = url.read()
+      arr = np.asarray(bytearray(s), dtype=np.uint8)
+      self.img = cv2.imdecode(arr, -1)
+    # print(location)
+    # self.img = cv2.imread(location)
+      self.img = cv2.cvtColor(self.img, cv2.COLOR_BGR2GRAY)
+      self.img = cv2.resize(self.img, None, fx=2, fy=2)
     self.img_data = pytesseract.image_to_data(self.img, output_type=Output.DICT)
     self.img_data = self.remove_spaces()
     
@@ -36,9 +43,9 @@ class DrivingLicense():
         dl_no = d['text'][i].upper() +  d['text'][i+1]
         return dl_no
     
-    def is_valid(self):
-      if len(self.license_number()) == 15:
-        return True
+  def is_valid(self):
+    if len(self.license_number()) == 15:
+      return True
     return False
 
   def extract_name(self):
