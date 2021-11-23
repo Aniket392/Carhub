@@ -78,7 +78,7 @@ def Signin(request):
         user = authenticate(username = username, password = password)
         if user is not None:    
             login(request, user)
-            return JsonResponse({"login":"successful", "userid":user.id})
+            return JsonResponse({"login":"successful", "userid":user.id, 'csrftoken': request.COOKIES.get('csrftoken'), 'sessionid': request.session.session_key})
         else:
             request.session['invalid_user'] = 1
             return JsonResponse({'message': "Not authorized to access this page."}, status = 401)
