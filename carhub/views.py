@@ -166,7 +166,11 @@ def RentCar(request):
         else:
             return JsonResponse({'message': "Redirect To SignIn."}, status = 302)
     else:
-        return render(request, 'index.html')
+        context = {}
+        context['city'] = list(City.objects.values('id', 'name'))
+        context['category'] = list(Category.objects.values('id', 'name'))
+        return JsonResponse(context, status = 200)
+        # return render(request, 'index.html')
 
 def protected_media(request, file):
     document = get_object_or_404(Car, photo="cars/"+ file)

@@ -35,9 +35,9 @@ class Car(timestamp):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     city = models.ForeignKey(City, on_delete=models.CASCADE)
     photo = CloudinaryField('img', default = None)
-    rc = CloudinaryField('rc', default = None)
+    # rc = CloudinaryField('rc', default = None)
     # photo = models.ImageField(upload_to = 'cars')
-    # rc = models.ImageField(upload_to = 'rc')
+    rc = models.ImageField(upload_to = 'rc')
 
     def __str__(self):
         return str(self.brand + self.modelName)
