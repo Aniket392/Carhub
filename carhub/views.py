@@ -169,6 +169,10 @@ def RentCar(request):
         context = {}
         context['city'] = list(City.objects.values('id', 'name'))
         context['category'] = list(Category.objects.values('id', 'name'))
+        if request.user.is_authenticated:
+            context['userdata'] = list(Car.objects.filter(user = request.user).values())
+            for car in context['userdata']:
+                car['photo'] = car['photo'].url
         return JsonResponse(context, status = 200)
         # return render(request, 'index.html')
 
