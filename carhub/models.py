@@ -63,8 +63,8 @@ class UserProxy(timestamp):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     is_valid_renter = models.BooleanField(default=False)
     is_valid_rider = models.BooleanField(default=False)
-    # dl = models.ImageField(upload_to='dl', blank = True)
-    dl = CloudinaryField('dl', default = None)
+    dl = models.ImageField(upload_to='dl', blank = True)
+    # dl = CloudinaryField('dl', default = None)
     dl_no = models.CharField(default=None, max_length = 15)
 
     def __str__(self):

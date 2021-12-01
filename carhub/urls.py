@@ -7,7 +7,7 @@ urlpatterns = [
 
     path('user/<int:pk>', views.UserDashboard, name="user-dashboard"),
 
-    path('media/cars/<str:file>', views.protected_media, name="protected_media"),
+    path('media/<str:folder>/<str:file>', views.protected_media, name="protected_media"),
     path('signup', views.Signup, name = "signup"),
     path('activate/<uidb64>/<token>/', views.activate, name='activate'),
     path('signin', views.Signin, name = "signin"),

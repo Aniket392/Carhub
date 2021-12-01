@@ -176,11 +176,18 @@ def RentCar(request):
         return JsonResponse(context, status = 200)
         # return render(request, 'index.html')
 
-def protected_media(request, file):
-    document = get_object_or_404(Car, photo="cars/"+ file)
+def protected_media(request, folder, file):
+    document=None
+    if folder == 'rc':
+        document = get_object_or_404(Car, rc=os.path.join(folder, file).replace("\\","/"))
+        document.dl = None
+    elif folder == 'dl':
+        document = get_object_or_404(UserProxy, dl=os.path.join(folder, file).replace("\\","/"))
+        document.rc = None
+    else:
+        return JsonResponse({'message': "Not Found."}, status = 404)
     if request.user == document.user or request.user.is_superuser :
-        path, file_name = os.path.split(file)
-        response = FileResponse(document.photo)
+        response = FileResponse(document.dl or document.rc)
         return response
     else:
         return JsonResponse({'message': "Not authorized to access this media."}, status = 401)
