@@ -19,6 +19,10 @@ from carhub.models import *
 from carhub.token import account_activation_token
 from carhub.forms import *
 from carhub.utils import CreationDataSaver
+import joblib
+import pandas as pd
+
+
 
 # ML Files
 from carhub.utils import DrivingLicense, DrivingLicenseDataSaver
@@ -236,22 +240,48 @@ def Book(request, carid):
             return 
 
 
-
+@csrf_exempt
 def PriceCalculator(request):
     if request.method == "POST":
+        scaler = joblib.load(open("backend/scaler.pkl", "rb"))
+        labelencoder = joblib.load(open("backend/encoder.pkl", "rb"))
+        model = joblib.load(open("backend/model.pkl", "rb"))
         year = request.POST.get('year', None)
         brand = request.POST.get('brand', None)
         odometer = request.POST.get('odometer', None)
         fuel = request.POST.get('fuel', None)
         drive = request.POST.get('drive', None)
-
         cylinder = '4 cylinders'
 
-        if year and brand and odometer and fuel and drive:
-            return JsonResponse({"message":"Filled"})
-        else:
-            return JsonResponse({"message":"Empty"})
-    else:
+        # check = pd.DataFrame(columns = ['year', 'manufacturer', 'cylinders', 'fuel', 'odometer', 'drive'])
+
+        dict = {'year':[year],
+        'manufacturer':[brand],
+        'odometer':[odometer],
+        'fuel':[fuel],
+        'drive':[drive],
+        'cylinders':[cylinder]
+       }
+
+        check = pd.DataFrame(dict)
+        check = check.drop(['year', 'odometer'], axis = 1)
+
+        data = pd.DataFrame({'manufacturer':[None], 'cylinders':[None], 'fuel':[None], 'drive':[None]})
+        print(labelencoder)
+        for key in labelencoder:
+            data[key] = labelencoder[key][check[key][0]]
+
+        data['year'] = year
+        data['odometer'] = odometer
+
+        data = data[['year', 'manufacturer', 'cylinders', 'fuel', 'odometer', 'drive']]
+
+        print(data)
+        data= scaler.transform(data)
+        # data = data[:, important_indices]
+        return JsonResponse(model.predict(data))
+
+    else: 
         return JsonResponse({"message":"Invalid request"}, status=400)
 
 
