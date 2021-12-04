@@ -17,6 +17,7 @@ urlpatterns = [
     path('rentcar', views.RentCar, name = "rentcar"),
 
     path('ridecar', views.RideCar, name = "ridecar"),
+    path('price-calculator', views.PriceCalculator, name = "pricecalculator"),
     path('ridecar/<int:city>', views.RideCar, name = "ridecar"),
     path('book/<int:carid>', views.Book, name = "bookcar"),
     path('test',views.test)

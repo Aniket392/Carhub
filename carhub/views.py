@@ -235,6 +235,26 @@ def Book(request, carid):
             
             return 
 
+
+            
+def PriceCalculator(request):
+    if request.method == "POST":
+        year = request.POST.get('year', None)
+        brand = request.POST.get('brand', None)
+        odometer = request.POST.get('odometer', None)
+        fuel = request.POST.get('fuel', None)
+        drive = request.POST.get('drive', None)
+
+        cylinder = '4 cylinders'
+
+        if year and brand and odometer and fuel and drive:
+            return JsonResponse({"message":"Filled"})
+        else:
+            return JsonResponse({"message":"Empty"})
+    else:
+        return JsonResponse({"message":"Invalid request"}, status=400)
+
+
 def test(request):
     if request.user.is_authenticated:
         return JsonResponse({'success':True})
