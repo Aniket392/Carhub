@@ -36,7 +36,6 @@ def UserDashboard(request, pk):
         if request.method == "GET":
             userData = list(User.objects.filter(id = pk).values('username', 'first_name', 'last_name', 'email', 'userproxy__dl', 'userproxy__is_valid_renter', 'userproxy__is_valid_rider'))
             order = list(Order.objects.filter(userid__id = pk).order_by('bookingDate'))
-            userData[0]['userproxy__dl'] = userData[0]['userproxy__dl'].url
             return JsonResponse({'user': userData, 'order':order}, status = 200)
         elif request.method == "POST":
             if request.FILES.get('file', None) is not None:
@@ -236,7 +235,7 @@ def Book(request, carid):
             return 
 
 
-            
+
 def PriceCalculator(request):
     if request.method == "POST":
         year = request.POST.get('year', None)
