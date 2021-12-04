@@ -10,11 +10,27 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 
+from logging import exception
 from pathlib import Path
 import os
 import cloudinary
 import cloudinary.uploader
 import cloudinary.api
+import pickle
+import joblib
+
+# import pandas as pd
+# import numpy as np
+# import seaborn as sns
+# import matplotlib.pyplot as plt
+
+# import subprocess as sp
+# import sys,os,shutil,pickle,time
+# from os.path import join
+# from sklearn import preprocessing
+# import pandas as pd
+# from collections import defaultdict
+from sklearn.preprocessing import MinMaxScaler
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -172,3 +188,12 @@ EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
 # SESSION_COOKIE_SECURE = True
 # CSRF_COOKIE_SAMESITE = 'None'
 # SESSION_COOKIE_SAMESITE = 'None'
+
+# directory = os.getcwd()
+# print(directory)
+# scaler = joblib.load(open("backend/scaler.pkl", "rb"))
+# labelencoder = joblib.load(open("backend/encoder.pkl", "rb"))
+# model = joblib.load(open("backend/model.pkl", "rb"))
+# try:
+# except Exception as e:
+#     print("error:" + str(e))
