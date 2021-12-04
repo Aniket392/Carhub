@@ -175,6 +175,7 @@ def RentCar(request):
         return JsonResponse(context, status = 200)
         # return render(request, 'index.html')
 
+@csrf_exempt
 def protected_media(request, folder, file):
     document=None
     if folder == 'rc':
