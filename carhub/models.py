@@ -3,7 +3,7 @@ from django.db import models
 from datetime import datetime
 from datetime import timedelta
 from cloudinary.models import CloudinaryField
-
+import datetime as dt
 class timestamp(models.Model):
     created_at = models.DateTimeField(default = datetime.now())
     updated_at = models.DateTimeField(default = datetime.now())
@@ -26,12 +26,27 @@ class City(timestamp):
     def __str__(self):
         return self.name
 
+class CarDetails(timestamp):
+    year = models.IntegerField(('year'), choices=[(r,r) for r in range(1950, dt.date.today().year+1)], default=dt.date.today().year)
+    odometer = models.IntegerField(default = 0)
+    fuel = models.CharField(default=None, max_length=40)
+    manufacturer = models.CharField(default=None, max_length=40)
+    drive = models.CharField(default='rwd', max_length=40)
+    cylinders = models.CharField(default='4 cylinders', max_length=40)
+    price_by_model = models.IntegerField()
+    price_by_user = models.IntegerField()
+    conflict = models.BooleanField(default=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return str(self.manufacturer + self.user.first_name)
+
 class Car(timestamp):
-    brand = models.CharField(max_length=50)
+    brand = models.CharField(max_length=50) 
     modelName = models.CharField(max_length=50)
     year = models.CharField(max_length=50)
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
-    price = models.PositiveIntegerField()
+    details = models.ForeignKey(CarDetails, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     city = models.ForeignKey(City, on_delete=models.CASCADE)
     photo = CloudinaryField('img', default = None)
@@ -66,6 +81,11 @@ class UserProxy(timestamp):
     dl = models.ImageField(upload_to='dl', blank = True)
     # dl = CloudinaryField('dl', default = None)
     dl_no = models.CharField(default=None, max_length = 15)
+    account_no = models.CharField(default=None, max_length=11)
+    IFSC = models.CharField(default=None, max_length=20)
+    holder_name = models.CharField(default=None, max_length=40)
 
     def __str__(self):
         return str(self.user.username)
+
+

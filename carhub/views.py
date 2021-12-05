@@ -1,4 +1,5 @@
 import os
+import json
 from backend import settings
 from django.core.checks import messages
 from django.http.response import FileResponse, HttpResponse, HttpResponseForbidden, HttpResponseNotFound, JsonResponse
@@ -15,17 +16,16 @@ from django.template.loader import render_to_string
 from django.db.models import Q
 from django.utils import timezone
 
+
 from carhub.models import *
 from carhub.token import account_activation_token
 from carhub.forms import *
 from carhub.utils import CreationDataSaver
-import joblib
-import pandas as pd
-
-
-
+import datetime
 # ML Files
 from carhub.utils import DrivingLicense, DrivingLicenseDataSaver
+import pandas as pd
+import joblib
 
 
 @csrf_exempt
@@ -85,7 +85,7 @@ def Signin(request):
         else:
             request.session['invalid_user'] = 1
             return JsonResponse({'message': "Not authorized to access this page."}, status = 401)
-    return JsonResponse({'message': "Show SignIn Form."}, status = 200)
+    return JsonResponse({'message': "Show SignIn Form."}, status = 302)
 
 @csrf_exempt
 def Signout(request):
@@ -148,11 +148,17 @@ def RentCar(request):
             model = request.POST['modelName']
             category = request.POST['category']
             year = request.POST['year']
-            price = request.POST['price']
+            detaild_id = request.POST['detail_id']
+            account_no = request.POST['account_no']
+            ifsc = request.POST['ifsc']
+            holder_name = request.POST['holder_name']
             user = request.user
-
             try:
-                car = Car.objects.get(brand=brandname, modelName = model, user = user, year = year, category = category, price=price)
+                details = CarDetails.objects.get(id = detaild_id)
+            except:
+                return JsonResponse({"message":"No Details Found"}, status = 404)
+            try:
+                car = Car.objects.get(brand=brandname, modelName = model, user = user, year = year, category = category, details = details)
                 return JsonResponse({'message': "Already Exists."}, status = 403)
             except:
                 form = RentCarForm(request.POST or None, request.FILES or None)
@@ -164,7 +170,15 @@ def RentCar(request):
                     car.updated_by = 'User'
                     car.created_at = timezone.now()
                     car.updated_at = timezone.now()
+                    car.details = details
                     car.save()
+
+                    user_proxy = UserProxy.objects.get(user = request.user)
+                    user_proxy.account_no = account_no
+                    user_proxy.IFSC = ifsc
+                    user_proxy.holder_name = holder_name
+                    user_proxy.save()
+
                     return JsonResponse({'message': "Added Car."}, status = 201)
         else:
             return JsonResponse({'message': "Redirect To SignIn."}, status = 302)
@@ -242,48 +256,72 @@ def Book(request, carid):
 
 @csrf_exempt
 def PriceCalculator(request):
+
+    if not request.user.is_authenticated:
+        return JsonResponse({'message': 'Redirect To Sign in'}, status = 302)
+
     if request.method == "POST":
         #Loading Model
         scaler = joblib.load(open("backend/scaler.pkl", "rb"))
         labelencoder = joblib.load(open("backend/encoder.pkl", "rb"))
         model = joblib.load(open("backend/model.pkl", "rb"))
 
+        #Extracting from Form
         year = request.POST.get('year', None)
-        brand = request.POST.get('brand', None)
+        manufacturer = request.POST.get('brand', None)
         odometer = request.POST.get('odometer', None)
         fuel = request.POST.get('fuel', None)
-        drive = request.POST.get('drive', None)
-        cylinder = '4 cylinders'
+        drive = '4wd' if request.POST.get('drive', None) == 'true' else 'rwd' 
+        cylinders = '4 cylinders'
 
-        # check = pd.DataFrame(columns = ['year', 'manufacturer', 'cylinders', 'fuel', 'odometer', 'drive'])
 
-        dict = {'year':[year],
-        'manufacturer':[brand],
-        'odometer':[odometer],
+        data = pd.DataFrame({'year':[year],
+        'manufacturer':[manufacturer],
+        'cylinders':[cylinders],
         'fuel':[fuel],
+        'odometer':[odometer],
         'drive':[drive],
-        'cylinders':[cylinder]
-       }
+       })
 
-        check = pd.DataFrame(dict)
-        check = check.drop(['year', 'odometer'], axis = 1)
-
-        data = pd.DataFrame({'manufacturer':[None], 'cylinders':[None], 'fuel':[None], 'drive':[None]})
-        print(labelencoder)
+       #Label Encoding
         for key in labelencoder:
-            data[key] = labelencoder[key][check[key][0]]
+            data[key] = labelencoder[key][data[key][0]]
 
-        data['year'] = year
-        data['odometer'] = odometer
+        data = scaler.transform(data)
+        price = model.predict(data)[0]
 
-        data = data[['year', 'manufacturer', 'cylinders', 'fuel', 'odometer', 'drive']]
+        percentage = 0.25
+        dollar = 70
 
-        print(data)
-        data= scaler.transform(data)
-        return JsonResponse({"price":model.predict(data)[0]})
+        price = round(((price*percentage*dollar)/100), 2)
+
+        car_details = CarDetails(year = year, odometer = odometer, fuel = fuel, manufacturer = manufacturer, drive = drive, cylinders = cylinders, price_by_user = price, price_by_model = price, user = request.user)
+        car_details = CreationDataSaver(car_details)
+        car_details.save()
+        return JsonResponse({"price":price, "detailid":car_details.id})
+    
+    elif request.method == 'PUT':
+        data = json.loads(request.body.decode('utf8').replace("'", '"'))
+        detailid = data.get('detailid', None)
+        user_price = data.get('user_price', None)
+        if user_price:
+            try:
+                detail = CarDetails.objects.get(id = detailid)
+                detail.price_by_user = user_price
+                detail.conflict = True
+                detail.updated_at = timezone.now()
+                detail.save()
+                return JsonResponse({"message":"Updated the User Price. We will Manually Check the Rent Price For Car"}, status = 202)
+            except:
+                return JsonResponse({"message":"Invalid Detail ID"}, status = 422)
+        else:
+            return JsonResponse({"message":"No Conflict With Price"}, status = 302)
 
     else: 
-        return JsonResponse({"message":"Invalid request"}, status=400)
+        return JsonResponse({"message":"Invalid request"}, status=405)
+
+
+
 
 
 def test(request):
