@@ -81,7 +81,7 @@ def Signin(request):
         user = authenticate(username = username, password = password)
         if user is not None:    
             login(request, user)
-            return JsonResponse({"login":"successful", "userid":user.id, 'csrftoken': request.COOKIES.get('csrftoken'), 'sessionid': request.session.session_key})
+            return JsonResponse({"login":"successful", "userid":user.id, 'csrftoken': request.COOKIES.get('csrftoken'), 'sessionid': request.session.session_key,"is_valid_rider":user.userproxy.is_valid_rider})
         else:
             request.session['invalid_user'] = 1
             return JsonResponse({'message': "Not authorized to access this page."}, status = 401)
@@ -243,9 +243,11 @@ def Book(request, carid):
 @csrf_exempt
 def PriceCalculator(request):
     if request.method == "POST":
+        #Loading Model
         scaler = joblib.load(open("backend/scaler.pkl", "rb"))
         labelencoder = joblib.load(open("backend/encoder.pkl", "rb"))
         model = joblib.load(open("backend/model.pkl", "rb"))
+
         year = request.POST.get('year', None)
         brand = request.POST.get('brand', None)
         odometer = request.POST.get('odometer', None)
@@ -278,8 +280,7 @@ def PriceCalculator(request):
 
         print(data)
         data= scaler.transform(data)
-        # data = data[:, important_indices]
-        return JsonResponse(model.predict(data))
+        return JsonResponse({"price":model.predict(data)[0]})
 
     else: 
         return JsonResponse({"message":"Invalid request"}, status=400)
