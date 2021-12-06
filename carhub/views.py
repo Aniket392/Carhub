@@ -21,7 +21,7 @@ from carhub.models import *
 from carhub.token import account_activation_token
 from carhub.forms import *
 from carhub.utils import CreationDataSaver
-import datetime
+from datetime import datetime
 # ML Files
 from carhub.utils import DrivingLicense, DrivingLicenseDataSaver
 import pandas as pd
