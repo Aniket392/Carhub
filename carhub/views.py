@@ -81,7 +81,7 @@ def Signin(request):
         user = authenticate(username = username, password = password)
         if user is not None:    
             login(request, user)
-            return JsonResponse({"login":"successful", "userid":user.id, 'csrftoken': request.COOKIES.get('csrftoken'), 'sessionid': request.session.session_key,"is_valid_rider":user.userproxy.is_valid_rider})
+            return JsonResponse({"login":"successful", "userid":user.id, 'csrftoken': request.COOKIES.get('csrftoken'), 'sessionid': request.session.session_key,"is_active": user.is_active ,"is_valid_rider":user.userproxy.is_valid_rider})
         else:
             request.session['invalid_user'] = 1
             return JsonResponse({'message': "Not authorized to access this page."}, status = 401)
@@ -109,6 +109,7 @@ def Signup(request):
                 user = User.objects.create_user(username=username, password= password, email=email)
                 user.is_active = False
                 user.save()
+
                 current_site = get_current_site(request)
                 mail_subject = 'Activate your Carhub account.'
                 message = render_to_string('acc_active_email.html', {
@@ -121,6 +122,7 @@ def Signup(request):
                 email = EmailMessage(
                             mail_subject, message, to=[to_email]
                 )
+                print(email)
                 email.send()
                 login(request, user)
                 return JsonResponse({'Mail': "Sent"}, status = 201)
@@ -144,14 +146,14 @@ def activate(request, uidb64, token):
 def RentCar(request):   
     if request.method == "POST":
         if request.user.is_authenticated:
-            brandname = request.POST['brand']
-            model = request.POST['modelName']
-            category = request.POST['category']
-            year = request.POST['year']
-            detaild_id = request.POST['detail_id']
-            account_no = request.POST['account_no']
-            ifsc = request.POST['ifsc']
-            holder_name = request.POST['holder_name']
+            brandname = request.POST['brand', None]
+            model = request.POST.get('modelName', None)
+            category = request.POST.get('category', None)
+            year = request.POST.get('year', None)
+            detaild_id = request.POST.get('detail_id', None)
+            account_no = request.POST.get('account_no', None)
+            ifsc = request.POST.get('ifsc', None)
+            holder_name = request.POST.get('holder_name', None)
             user = request.user
             try:
                 details = CarDetails.objects.get(id = detaild_id)
@@ -173,13 +175,16 @@ def RentCar(request):
                     car.details = details
                     car.save()
 
-                    user_proxy = UserProxy.objects.get(user = request.user)
-                    user_proxy.account_no = account_no
-                    user_proxy.IFSC = ifsc
-                    user_proxy.holder_name = holder_name
-                    user_proxy.save()
+                    if account_no and ifsc and holder_name:
+                        user_proxy = UserProxy.objects.get(user = request.user)
+                        user_proxy.account_no = account_no
+                        user_proxy.IFSC = ifsc
+                        user_proxy.holder_name = holder_name
+                        user_proxy.save()
 
                     return JsonResponse({'message': "Added Car."}, status = 201)
+                else:
+                    return JsonResponse({"message":form.errors})
         else:
             return JsonResponse({'message': "Redirect To SignIn."}, status = 302)
     else:
@@ -188,8 +193,20 @@ def RentCar(request):
         context['category'] = list(Category.objects.values('id', 'name'))
         if request.user.is_authenticated:
             context['userdata'] = list(Car.objects.filter(user = request.user).values())
+
+            # Checking Account Details
+            has_account_details = False
+            try:
+                proxy = UserProxy.objects.get(user = request.user)
+                if not proxy.account_no == None:
+                    has_account_details = True
+            except:
+                return JsonResponse({"message":"No User Proxy"}, status = 422)
+            context['has_account_details'] = has_account_details
+            
+            # Car Photo URL
             for car in context['userdata']:
-                car['photo'] = car['photo'].url
+                car['photo'] = car['photo'].url 
         return JsonResponse(context, status = 200)
         # return render(request, 'index.html')
 
@@ -311,6 +328,7 @@ def PriceCalculator(request):
                 detail.conflict = True
                 detail.updated_at = timezone.now()
                 detail.save()
+
                 return JsonResponse({"message":"Updated the User Price. We will Manually Check the Rent Price For Car"}, status = 202)
             except:
                 return JsonResponse({"message":"Invalid Detail ID"}, status = 422)

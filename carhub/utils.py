@@ -6,16 +6,20 @@ from pytesseract import Output
 from django.utils import timezone
 import numpy as np
 import urllib.request
+import os
+
+from backend.settings import BASE_DIR
 class DrivingLicense():
   def __init__(self, location):
-    with urllib.request.urlopen(location) as url:
-      s = url.read()
-      arr = np.asarray(bytearray(s), dtype=np.uint8)
-      self.img = cv2.imdecode(arr, -1)
-    # print(location)
-    # self.img = cv2.imread(location)
-      self.img = cv2.cvtColor(self.img, cv2.COLOR_BGR2GRAY)
-      self.img = cv2.resize(self.img, None, fx=2, fy=2)
+    path = os.path.join(BASE_DIR,"media\{}".format(location))
+    # with urllib.request.urlopen(location) as url:
+    #   s = url.read()
+    #   arr = np.asarray(bytearray(s), dtype=np.uint8)
+    #   self.img = cv2.imdecode(arr, -1)
+    # # print(location)
+    self.img = cv2.imread(path)
+    self.img = cv2.cvtColor(self.img, cv2.COLOR_BGR2GRAY)
+    self.img = cv2.resize(self.img, None, fx=2, fy=2)
     self.img_data = pytesseract.image_to_data(self.img, output_type=Output.DICT)
     self.img_data = self.remove_spaces()
     
@@ -85,7 +89,8 @@ def CreationDataSaver(obj):
 
 
 def DrivingLicenseDataSaver(userproxy):
-  dl = DrivingLicense(userproxy.dl.url)
+  print(userproxy.dl)
+  dl = DrivingLicense(userproxy.dl)
   if dl.is_valid():
       userproxy.dl_no = dl.license_number()
       first_name, last_name = dl.extract_name()
