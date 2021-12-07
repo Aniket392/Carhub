@@ -1,5 +1,11 @@
+*.py[cod]
 minor-project/
-.env
-__pycache__/
-migrations/
 media/
+migrations/
+__pycache__/
+carhub/__pycache__/
+backend/carhub/migrations/
+.env
+environ.txt
+backend/model.pkl
+.gitattributes
