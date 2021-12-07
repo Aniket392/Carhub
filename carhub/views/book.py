@@ -1,8 +1,9 @@
-from carhub.models import Car
+from carhub.models import Car, Order
 from django.http.response import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from carhub.utils import CreationDataSaver
 
-
+@csrf_exempt
 def Book(request, carid):
     if request.user.is_authenticated:
         if not request.user.is_active or  not request.user.userproxy.is_valid_rider:
@@ -26,10 +27,21 @@ def Book(request, carid):
             # return JsonResponse({'data' : context, 'date_range_unavailable':date_range_unavailable})
             return JsonResponse(context)
         if request.method == 'POST':
-            fromDate = request.POST.get('from')
-            toDate = request.POST.get('to')
-            # Take Date Input -- Done
-            # Check DL(check validated user) At the time of signup check whether he has uploaded everything
-            # Check Balance
+            fromDate = request.POST.get('from', None)
+            toDate = request.POST.get('to', None)
+            price = request.POST.get('price', None)
+            print(fromDate, toDate, price)
+
+            if not fromDate or not toDate:
+                return JsonResponse({"message":"Invalid Dates"}, status = 422)
+
+            car = Car.objects.get(id = carid)
+            order = Order(userid = request.user, car = car, orderDateFrom = fromDate, orderDateExpire = toDate, totalOrderCost = price)
+            order = CreationDataSaver(order)
+            order.save()
+
+            # PAYTM Check
+            # Confirm status of payment otherwise payment will be Pending in Order Table
+            return JsonResponse({"message":"Order Given"})
     else:
         return JsonResponse({'message': 'Redirect To Sign in'}, status = 302)

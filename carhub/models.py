@@ -62,6 +62,7 @@ class Order(timestamp):
         ('BKD', 'Booked'),
         ('CAN', 'Cancelled'),
         ('COM', 'Completed'),
+        ('PEND', 'Pending'),
     ]
     userid = models.ForeignKey(User, on_delete=models.CASCADE)
     car =  models.ForeignKey(Car, on_delete=models.CASCADE, related_name='car_detail')
@@ -69,10 +70,10 @@ class Order(timestamp):
     orderDateExpire =  models.DateTimeField(default = datetime.now()+ timedelta(hours=1))
     totalOrderCost = models.PositiveIntegerField()
     bookingDate = models.DateTimeField(default = datetime.now())
-    status = models.CharField(max_length=3, choices=ORDER_STATUS, default='BKD')
+    status = models.CharField(max_length=4, choices=ORDER_STATUS, default='PEND')
 
     def __str__(self):
-        return str(self.userid + self.order)
+        return str(self.userid.first_name + self.car.brand)
 
 class UserProxy(timestamp):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
