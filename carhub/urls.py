@@ -20,5 +20,6 @@ urlpatterns = [
     path('price-calculator', views.PriceCalculator, name = "pricecalculator"),
     path('ridecar/<int:city>', views.RideCar, name = "ridecar"),
     path('book/<int:carid>', views.Book, name = "bookcar"),
+    path('order-status',views.handlerequest, name="handleRequest"),
     path('test',views.test)
 ]

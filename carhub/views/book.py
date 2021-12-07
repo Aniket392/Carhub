@@ -1,7 +1,13 @@
+# from Carhub.carhub.views.checkout import MERCHANT_KEY
+import json
+import os
 from carhub.models import Car, Order
 from django.http.response import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from carhub.utils import CreationDataSaver
+from PayTm import Checksum
+
+MERCHANT_KEY=os.environ.get('MERCHANT_KEY')
 
 @csrf_exempt
 def Book(request, carid):
@@ -42,6 +48,57 @@ def Book(request, carid):
 
             # PAYTM Check
             # Confirm status of payment otherwise payment will be Pending in Order Table
-            return JsonResponse({"message":"Order Given"})
+            param_dict = {
+
+                'MID': os.environ.get('MID'),
+                'ORDER_ID': str(order.id),
+                'TXN_AMOUNT': str(price),
+                'CUST_ID': request.user.email,
+                'INDUSTRY_TYPE_ID': 'Retail',
+                'WEBSITE': 'WEBSTAGING',
+                'CHANNEL_ID': 'WEB',
+                'CALLBACK_URL':'http://127.0.0.1:8000/order-status/',  #To be decided
+            }
+            param_dict['CHECKSUMHASH'] = Checksum.generate_checksum(param_dict, MERCHANT_KEY)
+            return JsonResponse({"param_dict":param_dict})
+            # return render(request, 'static/paytm.html', {'param_dict': param_dict})
     else:
         return JsonResponse({'message': 'Redirect To Sign in'}, status = 302)
+
+csrf_exempt
+def handlerequest(request):
+    # paytm will send you post request here
+    form = request.POST
+    response_dict = {}
+    for i in form.keys():
+        response_dict[i] = form[i]
+        if i == 'CHECKSUMHASH':
+            checksum = form[i]
+
+    verify = Checksum.verify_checksum(response_dict, MERCHANT_KEY, checksum)
+    if verify:
+        if response_dict['RESPCODE'] == '01':
+            print('order successful')
+            order = Order.objects.get(id = response_dict['ORDERID'])
+            order.status='BOOKED'
+            order.save()
+            # for item in order:
+            #     name=item.name
+            #     emailId= item.email
+            # template = render_to_string('shop/orderEmail.html',{'response_dict':response_dict,'name':name})
+            # email= EmailMessage(
+            #     'Order Confirmation',
+            #     template,
+            #     settings.EMAIL_HOST_USER,
+            #     [emailId],
+            # )
+            # email.fail_silently = False
+            # email.send()
+            return JsonResponse({"message": "order succesful"},status=202)
+        else:
+            print('order was not successful because' + response_dict['RESPMSG'])
+            # emailId=''
+            return JsonResponse({"message": response_dict['RESPMSG']}, status=402)
+    else:
+        return JsonResponse(status=404)
+    # return render(request, 'shop/paymentstatus.html', {'response': response_dict,'email':emailId})
