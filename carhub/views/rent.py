@@ -10,7 +10,7 @@ from carhub.utils import CreationDataSaver
 def RentCar(request):   
     if request.method == "POST":
         if request.user.is_authenticated:
-            brandname = request.POST['brand', None]
+            brandname = request.POST.get('brand', None)
             model = request.POST.get('modelName', None)
             category = request.POST.get('category', None)
             year = request.POST.get('year', None)
