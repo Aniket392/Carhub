@@ -1,13 +1,15 @@
 # from Carhub.carhub.views.checkout import MERCHANT_KEY
 import json
 import os
+
+from django.contrib.auth.models import User
 from carhub.models import Car, Order
 from django.http.response import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from carhub.utils import CreationDataSaver
 from PayTm import Checksum
-from django.shortcuts import render
-
+from django.template.loader import render_to_string
+from django.core.mail import EmailMessage
 MERCHANT_KEY=os.environ.get('MERCHANT_KEY')
 
 @csrf_exempt
@@ -62,7 +64,7 @@ def Book(request, carid):
             }
             param_dict['CHECKSUMHASH'] = Checksum.generate_checksum(param_dict, MERCHANT_KEY)
             return JsonResponse({"param_dict":param_dict})
-            # return render(request, 'payment.html', {'param_dict': param_dict})
+            # return render(request, 'static/paytm.html', {'param_dict': param_dict})
     else:
         return JsonResponse({'message': 'Redirect To Sign in'}, status = 302)
 
@@ -78,27 +80,41 @@ def handlerequest(request):
 
     verify = Checksum.verify_checksum(response_dict, MERCHANT_KEY, checksum)
     if verify:
+        print(response_dict)
+        order = Order.objects.select_related('userid').get(id = response_dict['ORDERID'])
+        name = order.userid.first_name
+        to_email = order.userid.email
         if response_dict['RESPCODE'] == '01':
             print('order successful')
-            order = Order.objects.get(id = response_dict['ORDERID'])
-            order.status='BOOKED'
+            
+            order.status='BKD'
             order.save()
-            # for item in order:
-            #     name=item.name
-            #     emailId= item.email
-            # template = render_to_string('shop/orderEmail.html',{'response_dict':response_dict,'name':name})
-            # email= EmailMessage(
-            #     'Order Confirmation',
-            #     template,
-            #     settings.EMAIL_HOST_USER,
-            #     [emailId],
-            # )
-            # email.fail_silently = False
-            # email.send()
+
+            mail_subject = 'Ride booked on successful payment'
+            message = render_to_string('orderEmail.html', {
+                'respnse_dict': response_dict,
+                'name': name,
+            })
+            email = EmailMessage(
+                        mail_subject, message, to=[to_email]
+            )
+            print(email)
+            email.send()
             return JsonResponse({"message": "order succesful"},status=202)
         else:
             print('order was not successful because' + response_dict['RESPMSG'])
-            # emailId=''
+            
+            order.status='FAIL'
+            order.save()
+            mail_subject = 'Booking failed '
+            message = render_to_string('orderEmail.html', {
+                'respnse_dict': response_dict,
+                'name': name
+            })
+            email = EmailMessage(
+                        mail_subject, message, to=[to_email]
+            )
+            email.send()
             return JsonResponse({"message": response_dict['RESPMSG']}, status=402)
     else:
         return JsonResponse(status=404)

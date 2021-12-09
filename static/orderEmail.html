@@ -1,0 +1,27 @@
+Hey {{name}},
+
+{%if response_dict.RESPCODE == '01'%}
+This is confirmation mail for your order.
+
+
+Your Payment has been confirmed for Order Id: {{response_dict.ORDERID}}.
+Amount = ₹ {{response_dict.TXNAMOUNT}}
+Transaction Id = {{response_dict.BANKTXNID}}
+Thank you for booking ride with us.
+
+{% else %}
+Your Payment has failed for Order Id: {{response_dict.ORDERID}}.
+Reason of failure: {{response_dict.RESPMSG}}
+Amount = ₹ {{response_dict.TXNAMOUNT}}
+Transaction Id = {{response_dict.BANKTXNID}}
+
+Try AGAIN, if you still face this problem try contacting our support team.
+
+{%endif%}}
+
+Keep renting with us,
+Happy Journey!!
+Team CarHub.
+
+---------------------------------------------------------
+Please note: This is a system generated e-mail. Please do not reply to this message.
