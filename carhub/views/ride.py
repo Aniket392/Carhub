@@ -1,10 +1,10 @@
 from django.db.models import Q
+from django.db.models.aggregates import Count
 from carhub.models import Car, Order, City
 from django.http.response import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
 from datetime import timedelta
-
 
 @csrf_exempt
 def RideCar(request, city=None):
@@ -12,13 +12,14 @@ def RideCar(request, city=None):
         fromDate = request.GET.get('fromDate', '')
         toDate = request.GET.get('toDate', '')
         if fromDate == '':
-            fromDate = timezone.now()
+            fromDate = timezone.now()+timedelta(days=1)
         if toDate == '':
-            toDate = timezone.now()+timedelta(days=1)
+            toDate = timezone.now()+timedelta(days=2)
         if city is not None:
             car_all = Order.objects.filter(car__city__id = city)
-            car_notbooked = Car.objects.filter(city__id = city).exclude(car_detail__in=car_all).values('id', 'brand', 'modelName', 'year', 'category__name', 'details__price_by_model', 'user_id', 'city_id', 'photo')
-            car_notbooked_date = Car.objects.filter(Q(city_id=city) & (Q(car_detail__orderDateFrom__gt=toDate) | Q(car_detail__orderDateExpire__lt=fromDate))).distinct().values('id', 'brand', 'modelName', 'year', 'category__name', 'details__price_by_model', 'user_id', 'city_id', 'photo')
+
+            car_notbooked = Car.objects.filter(city__id = city).exclude(car_detail__in=car_all).annotate(no_of_order=Count('car_detail__id', filter = Q(car_detail__status = 'COM'))).values('id', 'brand', 'modelName', 'year', 'category__name', 'details__price_by_model', 'user_id', 'city_id', 'photo', 'no_of_order')
+            car_notbooked_date = Car.objects.filter(Q(city_id=city) & (Q(car_detail__orderDateFrom__gt=toDate) | Q(car_detail__orderDateExpire__lt=fromDate))).distinct().annotate(no_of_order=Count('car_detail__id', filter = Q(car_detail__status = 'COM'))).values('id', 'brand', 'modelName', 'year', 'category__name', 'details__price_by_model', 'user_id', 'city_id', 'photo', 'no_of_order')
             car_data = list(car_notbooked.union(car_notbooked_date))
 
             # For Taking out URL from object
@@ -32,3 +33,19 @@ def RideCar(request, city=None):
             return JsonResponse({'data': city_data})
     else:
         return JsonResponse({'message': 'Redirect To Sign in'}, status = 302)
+
+
+@csrf_exempt
+def orderCount(request, city = None):
+
+    fromDate = request.GET.get('fromDate', '')
+    toDate = request.GET.get('toDate', '')
+    if fromDate == '':
+        fromDate = timezone.now()+timedelta(days=1)
+    if toDate == '':
+        toDate = timezone.now()+timedelta(days=2)
+    car_all = Order.objects.filter(car__city__id = city)
+    car_notbooked = Car.objects.filter(city__id = city).exclude(car_detail__in=car_all)
+    car_notbooked_date = Car.objects.filter(Q(city_id=city) & (Q(car_detail__orderDateFrom__gt=toDate) | Q(car_detail__orderDateExpire__lt=fromDate))).distinct()
+    car_data = car_notbooked.union(car_notbooked_date)
+    
