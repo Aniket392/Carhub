@@ -12,6 +12,7 @@ from backend.settings import BASE_DIR
 class DrivingLicense():
   def __init__(self, location):
     path = os.path.join(BASE_DIR,"media\{}".format(location))
+    pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
     # with urllib.request.urlopen(location) as url:
     #   s = url.read()
     #   arr = np.asarray(bytearray(s), dtype=np.uint8)
@@ -19,8 +20,13 @@ class DrivingLicense():
     # # print(location)
     self.img = cv2.imread(path)
     self.img = cv2.cvtColor(self.img, cv2.COLOR_BGR2GRAY)
-    self.img = cv2.resize(self.img, None, fx=2, fy=2)
-    self.img_data = pytesseract.image_to_data(self.img, output_type=Output.DICT)
+    self.img = cv2.resize(self.img, None, fx=2, fy=2, interpolation=cv2.INTER_CUBIC)
+
+    kernel = np.ones((1, 1), np.uint8)
+    self.img = cv2.dilate(self.img, kernel, iterations=1)
+    self.img = cv2.erode(self.img, kernel, iterations=1)
+    # tessdata_dir_config = r'--tessdata-dir C:\Program Files\Tesseract-OCR\tessdata'
+    self.img_data = pytesseract.image_to_data(self.img,  output_type=Output.DICT)
     self.img_data = self.remove_spaces()
     
 
@@ -42,6 +48,7 @@ class DrivingLicense():
     d = self.img_data
     regex_state = '^([a-z|A-Z]{2}[0-9]{2})'
     regex_num = '^((19|20)[0-9][0-9])[0-9]{7}$'
+    print(d['text'])
     for i in range(len(d['text'])):
       if i<len(d['text'])-1 and re.match(regex_state, d['text'][i]) and re.match(regex_num, d['text'][i+1]):
         dl_no = d['text'][i].upper() +  d['text'][i+1]
@@ -49,6 +56,7 @@ class DrivingLicense():
     
   def is_valid(self):
     lc = self.license_number()
+    print(lc)
     if lc and len(lc) == 15:
       return True
     return False
@@ -89,7 +97,6 @@ def CreationDataSaver(obj):
 
 
 def DrivingLicenseDataSaver(userproxy):
-  print(userproxy.dl)
   dl = DrivingLicense(userproxy.dl)
   if dl.is_valid():
       userproxy.dl_no = dl.license_number()
@@ -98,5 +105,5 @@ def DrivingLicenseDataSaver(userproxy):
       userproxy.is_valid_rider = True
       userproxy.user.save()
   else:
-    message = "Invalid DL"
+    message = "Invalid"
     return message
