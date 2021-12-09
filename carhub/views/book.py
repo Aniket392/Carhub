@@ -6,6 +6,7 @@ from django.http.response import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from carhub.utils import CreationDataSaver
 from PayTm import Checksum
+from django.shortcuts import render
 
 MERCHANT_KEY=os.environ.get('MERCHANT_KEY')
 
@@ -61,11 +62,11 @@ def Book(request, carid):
             }
             param_dict['CHECKSUMHASH'] = Checksum.generate_checksum(param_dict, MERCHANT_KEY)
             return JsonResponse({"param_dict":param_dict})
-            # return render(request, 'static/paytm.html', {'param_dict': param_dict})
+            # return render(request, 'payment.html', {'param_dict': param_dict})
     else:
         return JsonResponse({'message': 'Redirect To Sign in'}, status = 302)
 
-csrf_exempt
+@csrf_exempt
 def handlerequest(request):
     # paytm will send you post request here
     form = request.POST
