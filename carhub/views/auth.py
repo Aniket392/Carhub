@@ -14,8 +14,6 @@ from carhub.token import account_activation_token
 @csrf_exempt
 def Signin(request):
     if request.method == "POST":
-        if request.user.is_authenticated:
-            return JsonResponse({"login":"Already LoggedIn"})   # Change to be done
         email = request.POST.get('email', None)
         password = request.POST.get('password', None)
 
@@ -25,6 +23,8 @@ def Signin(request):
             return JsonResponse({'message': "Email Not Found."}, status = 401)
         user = authenticate(username = username, password = password)
         if user is not None:    
+            if not user.is_active:
+                return JsonResponse({"message":"Activate your account."})   # Change to be done
             login(request, user)
             return JsonResponse({"login":"successful", "userid":user.id, 'csrftoken': request.COOKIES.get('csrftoken'), 'sessionid': request.session.session_key,"is_active": user.is_active ,"is_valid_rider":user.userproxy.is_valid_rider})
         else:
