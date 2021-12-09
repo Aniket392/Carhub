@@ -1,6 +1,6 @@
 from django.db.models import Q
 from django.db.models.aggregates import Count
-from carhub.models import Car, Order, City
+from carhub.models import Car, Category, Order, City
 from django.http.response import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
@@ -33,8 +33,10 @@ def RideCar(request, city=None):
             # For Taking out URL from object
             for car in car_data:
                 car['photo'] = car['photo'].url
+            
+            cat_data = list(Category.objects.values('id', 'name'))
 
-            return JsonResponse({'data': car_data})
+            return JsonResponse({'data': car_data, 'category':cat_data})
         else:
             city_data = list(City.objects.values('id', 'name'))
             return JsonResponse({'data': city_data})
