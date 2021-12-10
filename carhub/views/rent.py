@@ -21,6 +21,9 @@ def RentCar(request):
             user = request.user
             try:
                 details = CarDetails.objects.get(id = detaild_id)
+                details.conflict_manually_resolved = False
+                details.conflict = False
+                details.save()
             except:
                 return JsonResponse({"message":"No Details Found"}, status = 404)
             try:
