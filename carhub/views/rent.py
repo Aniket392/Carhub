@@ -15,9 +15,9 @@ def RentCar(request):
             category = request.POST.get('category', None)
             year = request.POST.get('year', None)
             detaild_id = request.POST.get('detail_id', None)
-            account_no = request.POST.get('account_no', None)
-            ifsc = request.POST.get('ifsc', None)
-            holder_name = request.POST.get('holder_name', None)
+            # account_no = request.POST.get('account_no', None)
+            # ifsc = request.POST.get('ifsc', None)
+            # holder_name = request.POST.get('holder_name', None)
             user = request.user
             try:
                 details = CarDetails.objects.get(id = detaild_id)
@@ -39,12 +39,12 @@ def RentCar(request):
                     car.details = details
                     car.save()
 
-                    if account_no and ifsc and holder_name:
-                        user_proxy = UserProxy.objects.get(user = request.user)
-                        user_proxy.account_no = account_no
-                        user_proxy.IFSC = ifsc
-                        user_proxy.holder_name = holder_name
-                        user_proxy.save()
+                    # if account_no and ifsc and holder_name:
+                    #     user_proxy = UserProxy.objects.get(user = request.user)
+                    #     user_proxy.account_no = account_no
+                    #     user_proxy.IFSC = ifsc
+                    #     user_proxy.holder_name = holder_name
+                    #     user_proxy.save()
 
                     return JsonResponse({'message': "Added Car."}, status = 201)
                 else:

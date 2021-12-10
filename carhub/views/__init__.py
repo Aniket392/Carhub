@@ -1,6 +1,6 @@
 from carhub.views.auth import Signin, Signout, Signup, activate
 from carhub.views.book import Book, handlerequest
-from carhub.views.dashboard import UserDashboard
+from carhub.views.dashboard import UserDashboard, CarDataAPI, BankDetails
 from carhub.views.home import Home
 from carhub.views.media import protected_media
 from carhub.views.rent import RentCar, PriceCalculator
