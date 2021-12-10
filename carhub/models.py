@@ -36,6 +36,7 @@ class CarDetails(timestamp):
     price_by_model = models.IntegerField()
     price_by_user = models.IntegerField()
     conflict = models.BooleanField(default=False)
+    conflict_manually_resolved = models.BooleanField(default=False, blank = True, null = True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
 
     def __str__(self):
@@ -53,6 +54,7 @@ class Car(timestamp):
     # rc = CloudinaryField('rc', default = None)
     # photo = models.ImageField(upload_to = 'cars')
     rc = models.ImageField(upload_to = 'rc')
+    is_valid = models.BooleanField(default=False, blank=True, null=True)
 
     def __str__(self):
         return str(self.brand + self.modelName)
@@ -63,6 +65,7 @@ class Order(timestamp):
         ('CAN', 'Cancelled'),
         ('COM', 'Completed'),
         ('PEND', 'Pending'),
+        ('FAIL', 'Failed'),
     ]
     userid = models.ForeignKey(User, on_delete=models.CASCADE)
     car =  models.ForeignKey(Car, on_delete=models.CASCADE, related_name='car_detail')
@@ -81,7 +84,7 @@ class UserProxy(timestamp):
     is_valid_rider = models.BooleanField(default=False)
     dl = models.ImageField(upload_to='dl', blank = True)
     # dl = CloudinaryField('dl', default = None)
-    dl_no = models.CharField(default=None, max_length = 15)
+    dl_no = models.CharField(default=None, max_length = 15, null=True, blank = True)
     account_no = models.CharField(default=None, max_length=11)
     IFSC = models.CharField(default=None, max_length=20)
     holder_name = models.CharField(default=None, max_length=40)
