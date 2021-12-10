@@ -75,3 +75,15 @@ def BankDetails(request, pk):
         else:
             return JsonResponse({"message":"Invalid Form Data"}, status=400)
     return JsonResponse({"message":"Invalid Request"}, status=405)
+
+@csrf_exempt
+def RiderOrderDetails(request, pk):
+    if not (request.user.id == pk or request.user.is_superuser):
+        return JsonResponse({"message":"Not authorized to access this page."}, status=401)
+    if request.method == 'GET':
+        order = list(Order.objects.filter(userid=pk).values('id', 'status', 'car__brand', 'car__modelName', 'car__year', 'car__user__first_name', 'car__photo', 'bookingDate', 'orderDateFrom', 'orderDateExpire', 'totalOrderCost'))
+
+        for ord in order:
+            ord['car__photo'] = ord['car__photo'].url
+        
+        return JsonResponse({"rider_order":ord}, status=200)
