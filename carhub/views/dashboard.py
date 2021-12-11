@@ -46,6 +46,22 @@ def CarDataAPI(request,pk):
         car_data = list(CarDetails.objects.filter(user=pk).values())
         order_of_users_car = list(Order.objects.filter(car__user__id=pk).order_by('bookingDate').values())
         return JsonResponse({"car_data":car_data,"order_of_users_car":order_of_users_car})
+    if request.method == 'POST':
+        orderid = request.POST.get('orderid', None)
+        try:
+            order = Order.objects.get(id = orderid)
+        except:
+            return JsonResponse({"message":"No Order with this ID."},status = 404)
+        order.status = 'COM'
+        expected_return_date = order.orderDateExpire.date()         # Expected Return Date
+        return_date = datetime.datetime.now().date()                # Return Date
+        day_difference = (return_date - expected_return_date).days
+        if day_difference <= 0:
+            day_difference = 0
+            pass
+        outstanding_amount = day_difference*order.car.details.price_by_model         # Outstanding Amount
+        order.save()
+        return JsonResponse({"expected_return_date":expected_return_date, "return_date":return_date, "outstanding_amount":outstanding_amount})
 
 
 @csrf_exempt
@@ -82,12 +98,23 @@ def RiderOrderDetails(request, pk):
     if not (request.user.id == pk or request.user.is_superuser):
         return JsonResponse({"message":"Not authorized to access this page."}, status=401)
     if request.method == 'GET':
-        order = list(Order.objects.filter(userid=pk).values('id', 'status', 'car__brand', 'car__modelName', 'car__year', 'car__user__first_name', 'car__photo', 'bookingDate', 'orderDateFrom', 'orderDateExpire', 'totalOrderCost'))
+        order = list(Order.objects.filter(userid=pk).values('id', 'status', 'car__brand', 'car__modelName', 'car__year', 'car__user__first_name', 'car__photo', 'bookingDate', 'orderDateFrom', 'orderDateExpire', 'totalOrderCost', 'status'))
 
         for ord in order:
             ord['car__photo'] = ord['car__photo'].url
         
         return JsonResponse({"rider_order":ord}, status=200)
+    if request.method == 'POST':
+        orderid = request.POST.get('orderid', None)
+        try:
+            order = Order.objects.get(id = orderid)
+            order.status = 'RSRE'
+            order.updated_at = datetime.datetime.now()
+            order.save()
+        except Exception as e:
+            return JsonResponse({"message":"No Order with this ID"}, status = 404)
+        return JsonResponse({"message":"Ride Ended from your side. Waiting for Confirmation from Renter."})
+
 
 
 @csrf_exempt
