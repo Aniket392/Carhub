@@ -85,9 +85,10 @@ class UserProxy(timestamp):
     dl = models.ImageField(upload_to='dl', blank = True)
     # dl = CloudinaryField('dl', default = None)
     dl_no = models.CharField(default=None, max_length = 15, null=True, blank = True)
-    account_no = models.CharField(default=None, max_length=11)
-    IFSC = models.CharField(default=None, max_length=20)
-    holder_name = models.CharField(default=None, max_length=40)
+    account_no = models.CharField(default=None, max_length=11, null=True, blank = True)
+    IFSC = models.CharField(default=None, max_length=20, null=True, blank = True)
+    holder_name = models.CharField(default=None, max_length=40, null=True, blank = True)
+    mobile_number = models.CharField(default=None,  null=True, blank = True, max_length=12)
 
     def __str__(self):
         return str(self.user.username)

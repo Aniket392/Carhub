@@ -8,7 +8,9 @@ from django.template.loader import render_to_string
 from django.utils.encoding import force_bytes, force_text
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.mail import EmailMessage
+from carhub.models import UserProxy
 from carhub.token import account_activation_token
+from carhub.utils import CreationDataSaver
 
 
 @csrf_exempt
@@ -48,7 +50,8 @@ def Signup(request):
         username = request.POST.get('username', None)
         email = request.POST.get('email', None)
         password = request.POST.get('password', None)
-        if username and email and password:
+        mobile_number = request.POST.get('mobile_number', None)
+        if username and email and password and mobile_number:
             try:
                 user = User.objects.filter(Q(email=email) | Q(username=username))[0]
                 return JsonResponse({'message': "Already Exists."}, status = 403)
@@ -56,6 +59,9 @@ def Signup(request):
                 user = User.objects.create_user(username=username, password= password, email=email)
                 user.is_active = False
                 user.save()
+                userproxy = UserProxy(user = user, mobile_number = mobile_number)
+                userproxy = CreationDataSaver(userproxy)
+                userproxy.save()
 
                 current_site = get_current_site(request)
                 mail_subject = 'Activate your Carhub account.'
@@ -73,6 +79,8 @@ def Signup(request):
                 email.send()
                 login(request, user)
                 return JsonResponse({'Mail': "Sent"}, status = 201)
+        else:
+            return JsonResponse({'message': "Invalid Form"}, status = 422)
     return JsonResponse({'message': "Show SignUp Form."}, status = 200)
 
 
