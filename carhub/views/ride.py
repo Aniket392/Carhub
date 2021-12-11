@@ -43,18 +43,3 @@ def RideCar(request, city=None):
     else:
         return JsonResponse({'message': 'Redirect To Sign in'}, status = 302)
 
-
-@csrf_exempt
-def orderCount(request, city = None):
-
-    fromDate = request.GET.get('fromDate', '')
-    toDate = request.GET.get('toDate', '')
-    if fromDate == '':
-        fromDate = timezone.now()+timedelta(days=1)
-    if toDate == '':
-        toDate = timezone.now()+timedelta(days=2)
-    car_all = Order.objects.filter(car__city__id = city)
-    car_notbooked = Car.objects.filter(city__id = city).exclude(car_detail__in=car_all)
-    car_notbooked_date = Car.objects.filter(Q(city_id=city) & (Q(car_detail__orderDateFrom__gt=toDate) | Q(car_detail__orderDateExpire__lt=fromDate))).distinct()
-    car_data = car_notbooked.union(car_notbooked_date)
-    
