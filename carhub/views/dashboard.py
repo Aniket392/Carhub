@@ -10,9 +10,9 @@ def UserDashboard(request, pk):
     if request.user.id == pk or request.user.is_superuser:
         if request.method == "GET":
             userData = list(User.objects.filter(id = pk).values('username', 'first_name', 'last_name', 'email', 'userproxy__dl', 'userproxy__is_valid_renter', 'userproxy__is_valid_rider'))
-            order = list(Order.objects.filter(userid__id = pk).order_by('bookingDate').values())
+            # order = list(Order.objects.filter(userid__id = pk).order_by('bookingDate').values())
             # CarDetails and Bank details
-            return JsonResponse({'user': userData, 'order':order}, status = 200)
+            return JsonResponse({'user': userData}, status = 200)
         elif request.method == "POST":
             if request.FILES.get('file', None) is not None:
                 try:
@@ -58,8 +58,8 @@ def CarDataAPI(request,pk):
         day_difference = (return_date - expected_return_date).days
         if day_difference <= 0:
             day_difference = 0
-            pass
         outstanding_amount = day_difference*order.car.details.price_by_model         # Outstanding Amount
+        # Mail send by AKhsit
         order.save()
         return JsonResponse({"expected_return_date":expected_return_date, "return_date":return_date, "outstanding_amount":outstanding_amount})
 
@@ -98,7 +98,7 @@ def RiderOrderDetails(request, pk):
     if not (request.user.id == pk or request.user.is_superuser):
         return JsonResponse({"message":"Not authorized to access this page."}, status=401)
     if request.method == 'GET':
-        order = list(Order.objects.filter(userid=pk).values('id', 'status', 'car__brand', 'car__modelName', 'car__year', 'car__user__first_name', 'car__photo', 'bookingDate', 'orderDateFrom', 'orderDateExpire', 'totalOrderCost', 'status'))
+        order = list(Order.objects.filter(userid=pk).order_by('-bookingDate').values('id', 'status', 'car__brand', 'car__modelName', 'car__year', 'car__user__first_name', 'car__photo', 'bookingDate', 'orderDateFrom', 'orderDateExpire', 'totalOrderCost', 'status'))
 
         for ord in order:
             ord['car__photo'] = ord['car__photo'].url
