@@ -61,11 +61,12 @@ class Car(timestamp):
 
 class Order(timestamp):
     ORDER_STATUS = [
-        ('BKD', 'Booked'),
-        ('CAN', 'Cancelled'),
-        ('COM', 'Completed'),
         ('PEND', 'Pending'),
+        ('BKD', 'Booked'),
+        ('RSRE', 'Rider-Side-Ride-Ended'),
+        ('COM', 'Completed'),
         ('FAIL', 'Failed'),
+        ('CAN', 'Cancelled'),
     ]
     userid = models.ForeignKey(User, on_delete=models.CASCADE)
     car =  models.ForeignKey(Car, on_delete=models.CASCADE, related_name='car_detail')
