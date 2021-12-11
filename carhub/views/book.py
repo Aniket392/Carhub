@@ -20,7 +20,7 @@ def Book(request, carid):
 
         if request.method == 'GET':
             try:
-                car = Car.objects.filter(id=1).select_related('details', 'user', 'city', 'category')
+                car = Car.objects.filter(id=carid).select_related('details', 'user', 'city', 'category')
                 context = vars(car[0])
             except:
                 return JsonResponse({"message":"No such Car Found"}, status = 404)
@@ -92,13 +92,14 @@ def handlerequest(request):
 
             mail_subject = 'Ride booked on successful payment'
             message = render_to_string('orderEmail.html', {
-                'respnse_dict': response_dict,
+                'response_dict': response_dict,
                 'name': name,
             })
             email = EmailMessage(
                         mail_subject, message, to=[to_email]
             )
-            print(email)
+            print(to_email,mail_subject,message,name)
+            email.fail_silently = False
             email.send()
             return JsonResponse({"message": "order succesful"},status=202)
         else:
@@ -108,7 +109,7 @@ def handlerequest(request):
             order.save()
             mail_subject = 'Booking failed '
             message = render_to_string('orderEmail.html', {
-                'respnse_dict': response_dict,
+                'response_dict': response_dict,
                 'name': name
             })
             email = EmailMessage(
