@@ -103,7 +103,7 @@ def RiderOrderDetails(request, pk):
         for ord in order:
             ord['car__photo'] = ord['car__photo'].url
         
-        return JsonResponse({"rider_order":ord}, status=200)
+        return JsonResponse({"rider_order":order}, status=200)
     if request.method == 'POST':
         orderid = request.POST.get('orderid', None)
         try:
