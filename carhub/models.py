@@ -93,3 +93,16 @@ class UserProxy(timestamp):
         return str(self.user.username)
 
 
+class Report(timestamp):
+    REPORT_STATUS = [
+        ('OPEN', 'open'),
+        ('RES', 'resolved'),
+        ('CLOSE', 'closed'),
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    order = models.ForeignKey(Order, on_delete=models.CASCADE)
+    issueDate = models.DateField(default=dt.date.today())
+    message = models.TextField()
+    status = models.CharField(max_length=5, choices=REPORT_STATUS, default='OPEN')
+    resolution = models.TextField(default=None, null=True, blank=True)

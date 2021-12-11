@@ -9,6 +9,7 @@ urlpatterns = [
     path('user/<int:pk>/car-data', views.CarDataAPI, name="car-data"),
     path('user/<int:pk>/bank-detail', views.BankDetails, name="bank-detail"),
     path('user/<int:pk>/rider-order-detail', views.RiderOrderDetails, name="rider-order-detail"),
+    path('user/<int:pk>/report-now', views.ReportNow, name="report-now"),
 
     path('media/<str:folder>/<str:file>', views.protected_media, name="protected_media"),
 

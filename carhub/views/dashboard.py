@@ -1,8 +1,9 @@
 from django.contrib.auth.models import User
 from django.http.response import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from carhub.models import Car, CarDetails, Order, UserProxy
+from carhub.models import Car, CarDetails, Order, Report, UserProxy
 from carhub.utils import CreationDataSaver, DrivingLicenseDataSaver
+import datetime
 
 @csrf_exempt
 def UserDashboard(request, pk):
@@ -87,3 +88,31 @@ def RiderOrderDetails(request, pk):
             ord['car__photo'] = ord['car__photo'].url
         
         return JsonResponse({"rider_order":ord}, status=200)
+
+
+@csrf_exempt
+def ReportNow(request, pk):
+    if not (request.user.id == pk or request.user.is_superuser):
+        return JsonResponse({"message":"Not authorized to access this page."}, status=401)
+    if request.method == 'GET':
+        report = list(Report.objects.filter(user__id = pk).values())
+        return JsonResponse({"reports": report})
+    if request.method == 'POST':
+        message = request.POST.get('message', None)
+        orderid = request.POST.get('orderid', None)
+        try:
+            order = Order.objects.get(id = orderid)
+        except:
+            return JsonResponse({"message":"No Order with this ID."})
+        try:
+            report = Report.objects.get(order__id = orderid, user = request.user.id)
+        except :
+            report = Report(user = request.user, order = order, issueDate = datetime.date.today(), message = message, status = 'OPEN')
+            report = CreationDataSaver(report)
+        if report.status != 'CLOSE':
+            report.save()
+            # Mail Sending
+            return JsonResponse({"message":"Report recorded", "reportid":report.id})
+        else:
+            return JsonResponse({"message":"Report Already recorded and is In-Progress."})
+        
