@@ -9,7 +9,7 @@ def UserDashboard(request, pk):
     if request.user.id == pk or request.user.is_superuser:
         if request.method == "GET":
             userData = list(User.objects.filter(id = pk).values('username', 'first_name', 'last_name', 'email', 'userproxy__dl', 'userproxy__is_valid_renter', 'userproxy__is_valid_rider'))
-            order = list(Order.objects.filter(userid__id = pk).order_by('bookingDate'))
+            order = list(Order.objects.filter(userid__id = pk).order_by('bookingDate').values())
             # CarDetails and Bank details
             return JsonResponse({'user': userData, 'order':order}, status = 200)
         elif request.method == "POST":
