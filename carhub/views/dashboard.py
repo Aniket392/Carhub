@@ -44,7 +44,7 @@ def CarDataAPI(request,pk):
         return JsonResponse({"message":"Not authorized to access this page."}, status=401)
     if request.method == 'GET':
         car_data = list(CarDetails.objects.filter(user=pk).values())
-        order_of_users_car = list(Order.objects.filter(car__user__id=pk).order_by('bookingDate').values())
+        order_of_users_car = list(Order.objects.filter(car__user__id=pk).order_by('-bookingDate').values())
         return JsonResponse({"car_data":car_data,"order_of_users_car":order_of_users_car})
     if request.method == 'POST':
         orderid = request.POST.get('orderid', None)
