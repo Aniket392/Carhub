@@ -1,4 +1,5 @@
 from django.contrib.auth.models import User
+from django.db.models import Q
 from django.http.response import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from carhub.models import Car, CarDetails, Order, Report, UserProxy
@@ -43,12 +44,15 @@ def CarDataAPI(request,pk):
     if not (request.user.id == pk or request.user.is_superuser):
         return JsonResponse({"message":"Not authorized to access this page."}, status=401)
     if request.method == 'GET':
-        car_data = list(CarDetails.objects.filter(user=pk).values('year', 'odometer', 'fuel', 'manufacturer', 'drive', 'cylinders', 'price_by_model', 'price_by_user', 'conflict', 'conflict_manually_resolved', 'user', 'car__photo', 'car__modelName'))
+        car_data = list(CarDetails.objects.filter(user=pk).values('id','year', 'odometer', 'fuel', 'manufacturer', 'drive', 'cylinders', 'price_by_model', 'price_by_user', 'conflict', 'conflict_manually_resolved', 'user', 'car__photo', 'car__modelName'))
         for data in car_data:
             if data['car__photo']:
-                data['car__photo'] = data['car__photo'].url        
-        order_of_users_car = list(Order.objects.filter(car__user__id=pk).order_by('-bookingDate').values())
-        return JsonResponse({"car_data":car_data,"order_of_users_car":order_of_users_car})
+                data['car__photo'] = data['car__photo'].url 
+
+        active_orders = Order.objects.filter(Q(car__user__id=pk) & Q(orderDateFrom__date__lte = datetime.date.today()) & Q(orderDateExpire__gte = datetime.date.today())).order_by('-bookingDate')
+        non_active_orders = list(Order.objects.filter(car__user__id=pk).exclude(id__in = active_orders).order_by('-bookingDate').values('id', 'userid', 'car__user__first_name', 'car__brand', 'car__modelName', 'orderDateFrom', 'orderDateExpire', 'totalOrderCost', 'bookingDate', 'status'))
+        active_orders_list = list(active_orders.values('id', 'userid', 'car__user__first_name', 'car__brand', 'car__modelName', 'orderDateFrom', 'orderDateExpire', 'totalOrderCost', 'bookingDate', 'status'))
+        return JsonResponse({"car_data":car_data, "active_orders":active_orders_list, "non_active_orders":non_active_orders})
     if request.method == 'POST':
         orderid = request.POST.get('orderid', None)
         try:
@@ -101,12 +105,19 @@ def RiderOrderDetails(request, pk):
     if not (request.user.id == pk or request.user.is_superuser):
         return JsonResponse({"message":"Not authorized to access this page."}, status=401)
     if request.method == 'GET':
-        order = list(Order.objects.filter(userid=pk).order_by('-bookingDate').values('id', 'status', 'car__brand', 'car__modelName', 'car__year', 'car__user__first_name', 'car__photo', 'bookingDate', 'orderDateFrom', 'orderDateExpire', 'totalOrderCost', 'status'))
 
-        for ord in order:
+        active_orders = Order.objects.filter(Q(userid=pk) & Q(orderDateFrom__date__lte = datetime.date.today()) & Q(orderDateExpire__gte = datetime.date.today())).order_by('-bookingDate')
+        non_active_orders = list(Order.objects.filter(userid=pk).exclude(id__in = active_orders).order_by('-bookingDate').values('id', 'status', 'car__brand', 'car__modelName', 'car__year', 'car__user__first_name', 'car__photo', 'bookingDate', 'orderDateFrom', 'orderDateExpire', 'totalOrderCost', 'status'))
+        active_orders_list = list(active_orders.values('id', 'status', 'car__brand', 'car__modelName', 'car__year', 'car__user__first_name', 'car__photo', 'bookingDate', 'orderDateFrom', 'orderDateExpire', 'totalOrderCost', 'status'))
+
+        # order = list(Order.objects.filter(userid=pk).order_by('-bookingDate').values('id', 'status', 'car__brand', 'car__modelName', 'car__year', 'car__user__first_name', 'car__photo', 'bookingDate', 'orderDateFrom', 'orderDateExpire', 'totalOrderCost', 'status'))
+
+        for ord in non_active_orders:
+            ord['car__photo'] = ord['car__photo'].url
+        for ord in active_orders_list:
             ord['car__photo'] = ord['car__photo'].url
         
-        return JsonResponse({"rider_order":order}, status=200)
+        return JsonResponse({"rider_active_order":active_orders_list, "non_active_orders":non_active_orders}, status=200)
     if request.method == 'POST':
         orderid = request.POST.get('orderid', None)
         try:
