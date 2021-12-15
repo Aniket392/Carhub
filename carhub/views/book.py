@@ -87,6 +87,7 @@ def handlerequest(request):
         if response_dict['RESPCODE'] == '01':
             print('order successful')
             
+            renter_contact_number = order.car.user.userproxy.mobile_number
             order.status='BKD'
             order.save()
 
@@ -94,6 +95,7 @@ def handlerequest(request):
             message = render_to_string('orderEmail.html', {
                 'response_dict': response_dict,
                 'name': name,
+                'contact_number': renter_contact_number
             })
             email = EmailMessage(
                         mail_subject, message, to=[to_email]
@@ -101,6 +103,9 @@ def handlerequest(request):
             print(to_email,mail_subject,message,name)
             email.fail_silently = False
             email.send()
+            # Mail to renter
+            # Details  to be sent: Car Name, Car details, Date of booking, date of start of journey, date of end of journey, contact number of rider, name of rider.
+            # Issue: If same car model , car number required??
             return JsonResponse({"message": "order succesful"},status=202)
         else:
             print('order was not successful because' + response_dict['RESPMSG'])

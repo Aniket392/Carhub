@@ -9,6 +9,10 @@ Amount = ₹ {{response_dict.TXNAMOUNT}}
 Transaction Id = {{response_dict.BANKTXNID}}
 Thank you for booking ride with us.
 
+
+Details of the Car:
+Contact number of the car owner: {{contact_number}}
+
 {% else %}
 Your Payment has failed for Order Id: {{response_dict.ORDERID}}.
 Reason of failure: {{response_dict.RESPMSG}}

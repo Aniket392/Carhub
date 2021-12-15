@@ -5,6 +5,8 @@ from django.views.decorators.csrf import csrf_exempt
 from carhub.models import Car, CarDetails, Order, Report, UserProxy
 from carhub.utils import CreationDataSaver, DrivingLicenseDataSaver
 import datetime
+from django.template.loader import render_to_string
+from django.core.mail import EmailMessage
 
 @csrf_exempt
 def UserDashboard(request, pk):
@@ -66,8 +68,27 @@ def CarDataAPI(request,pk):
         if day_difference <= 0:
             day_difference = 0
         outstanding_amount = day_difference*order.car.details.price_by_model         # Outstanding Amount
-        # Mail send by AKhsit
         order.save()
+        # Mail to rider for any outstanding amount.
+        rider_name = order.user.first_name
+        rider_email = order.user.email
+        brand_model = ' '.join([order.car.brand ,order.car.modelName])
+        mail_subject = 'Your ride for {} has been completed'.format(brand_model)
+        renter = '00'
+        message = render_to_string('orderEmail.html', {
+            'name': rider_name,
+            'car_details': brand_model,
+            'renter': renter,
+            'outstanding_amount': outstanding_amount,
+            'return_date': return_date,
+            'expected_return_date': expected_return_date,         
+        })
+        email = EmailMessage(
+                    mail_subject, message, to=[rider_email]
+        )
+        print(rider_email,mail_subject,message,rider_name)
+        email.fail_silently = False
+        email.send()
         return JsonResponse({"expected_return_date":expected_return_date, "return_date":return_date, "outstanding_amount":outstanding_amount})
 
 
@@ -125,6 +146,23 @@ def RiderOrderDetails(request, pk):
             order.status = 'RSRE'
             order.updated_at = datetime.datetime.now()
             order.save()
+            # Mail to renter
+            renter_name = order.car.user.first_name
+            renter_email = order.car.user.email
+            brand_model = ' '.join([order.car.brand ,order.car.modelName])
+            mail_subject = 'Rider with {} completed ride from your end'.format(brand_model)
+            renter = '01'
+            message = render_to_string('orderEmail.html', {
+                'name': renter_name,
+                'car_details': brand_model,
+                'renter': renter,              
+            })
+            email = EmailMessage(
+                        mail_subject, message, to=[renter_email]
+            )
+            print(renter_email,mail_subject,message,renter_name)
+            email.fail_silently = False
+            email.send()
         except Exception as e:
             return JsonResponse({"message":"No Order with this ID"}, status = 404)
         return JsonResponse({"message":"Ride Ended from your side. Waiting for Confirmation from Renter."})

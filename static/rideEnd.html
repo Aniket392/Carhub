@@ -1,0 +1,32 @@
+Hey {{name}},
+
+{% if renter == '01' %}
+
+Car booking for you car with details {{car_details}} has been ended by the rider.
+
+If you have received the car, then please log in to the dashboard and end the ride.
+
+If there is any outstanding amount for any extension in the Journey period, then it will calculated once you end the ride.
+
+{% else %}
+
+Car booking for you car with details {{car_details}} has been ended by the renter.
+
+{% if outstanding_amount > 0 %}
+Your outstanding_amount = ₹ {{outstanding_amount}}
+As your payment is made till {{expected_return_date}}
+While your ride ended on {{return_date}}
+
+{% endif %}
+
+{% endif %}
+
+Or, If you face any issues or have any queries/concerns, please write to us using report option in dashboard.
+
+Keep renting & riding with us,
+
+Thanks,
+Team CarHub.
+
+---------------------------------------------------------
+Please note: This is a system generated e-mail. Please do not reply to this message.
