@@ -46,7 +46,7 @@ def CarDataAPI(request,pk):
     if not (request.user.id == pk or request.user.is_superuser):
         return JsonResponse({"message":"Not authorized to access this page."}, status=401)
     if request.method == 'GET':
-        car_data = list(CarDetails.objects.filter(user=pk).order_by('-conflict_manually_resolved').values('id','year', 'odometer', 'fuel', 'manufacturer', 'drive', 'cylinders', 'price_by_model', 'price_by_user', 'conflict', 'conflict_manually_resolved', 'user', 'car__photo', 'car__modelName'))
+        car_data = list(CarDetails.objects.filter(user=pk).order_by('-conflict_manually_resolved').values('id','year', 'odometer', 'fuel', 'manufacturer', 'drive', 'cylinders', 'price_by_model', 'price_by_user', 'conflict', 'conflict_manually_resolved', 'user', 'car__id', 'car__photo', 'car__modelName'))
         for data in car_data:
             if data['car__photo']:
                 data['car__photo'] = data['car__photo'].url 
