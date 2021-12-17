@@ -29,5 +29,6 @@ urlpatterns = [
     path('api/order-status/',views.handlerequest, name="order-status/"),
 
 
-    path('api/test',views.test)
+    path('api/test',views.test),
+    re_path(r'.*',views.view_404,name='404')
 ]

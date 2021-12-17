@@ -13,6 +13,7 @@ def Index(request):
     return render(request, 'build/index.html')
 
 def view_404(request, exception=None):
+    print('bello')
     return render(request, 'build/index.html')
 
 def test(request):

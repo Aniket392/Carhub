@@ -106,7 +106,7 @@ def handlerequest(request):
             # Mail to renter
             # Details  to be sent: Car Name, Car details, Date of booking, date of start of journey, date of end of journey, contact number of rider, name of rider.
             # Issue: If same car model , car number required??
-            return JsonResponse({"message": "order succesful"},status=202)
+            # return JsonResponse({"message": "order succesful"},status=202)
         else:
             print('order was not successful because' + response_dict['RESPMSG'])
             
@@ -121,7 +121,8 @@ def handlerequest(request):
                         mail_subject, message, to=[to_email]
             )
             email.send()
-            return JsonResponse({"message": response_dict['RESPMSG']}, status=402)
+            # return JsonResponse({"message": response_dict['RESPMSG']}, status=402)
+        return render(request, 'build/index.html')
     else:
         return JsonResponse(status=404)
     # return render(request, 'shop/paymentstatus.html', {'response': response_dict,'email':emailId})
