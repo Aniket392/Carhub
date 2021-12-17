@@ -12,7 +12,7 @@ from django.http.response import JsonResponse
 def Index(request):
     return render(request, 'build/index.html')
 
-def view_404(request):
+def view_404(request, exception=None):
     return render(request, 'build/index.html')
 
 def test(request):
