@@ -132,7 +132,6 @@ def RiderOrderDetails(request, pk):
         active_orders_list = list(active_orders.values('id', 'status', 'car__brand', 'car__modelName', 'car__year', 'car__user__first_name', 'car__photo', 'bookingDate', 'orderDateFrom', 'orderDateExpire', 'totalOrderCost', 'status'))
 
         # order = list(Order.objects.filter(userid=pk).order_by('-bookingDate').values('id', 'status', 'car__brand', 'car__modelName', 'car__year', 'car__user__first_name', 'car__photo', 'bookingDate', 'orderDateFrom', 'orderDateExpire', 'totalOrderCost', 'status'))
-        print(active_orders_list)
         for ord in non_active_orders:
             ord['car__photo'] = ord['car__photo'].url
         for ord in active_orders_list:
