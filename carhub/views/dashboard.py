@@ -127,12 +127,12 @@ def RiderOrderDetails(request, pk):
         return JsonResponse({"message":"Not authorized to access this page."}, status=401)
     if request.method == 'GET':
 
-        active_orders = Order.objects.filter(Q(userid=pk) & Q(orderDateFrom__date__lte = datetime.date.today()) & Q(orderDateExpire__gte = datetime.date.today())).order_by('-bookingDate')
+        active_orders = Order.objects.filter(Q(userid=pk) & Q(orderDateFrom__date__lte = datetime.date.today()) & Q(orderDateExpire__gte = datetime.date.today()) &( Q(status = 'RSRE') | Q(status = 'BKD'))).order_by('-bookingDate')
         non_active_orders = list(Order.objects.filter(userid=pk).exclude(id__in = active_orders).order_by('-bookingDate').values('id', 'status', 'car__brand', 'car__modelName', 'car__year', 'car__user__first_name', 'car__photo', 'bookingDate', 'orderDateFrom', 'orderDateExpire', 'totalOrderCost', 'status'))
         active_orders_list = list(active_orders.values('id', 'status', 'car__brand', 'car__modelName', 'car__year', 'car__user__first_name', 'car__photo', 'bookingDate', 'orderDateFrom', 'orderDateExpire', 'totalOrderCost', 'status'))
 
         # order = list(Order.objects.filter(userid=pk).order_by('-bookingDate').values('id', 'status', 'car__brand', 'car__modelName', 'car__year', 'car__user__first_name', 'car__photo', 'bookingDate', 'orderDateFrom', 'orderDateExpire', 'totalOrderCost', 'status'))
-
+        print(active_orders_list)
         for ord in non_active_orders:
             ord['car__photo'] = ord['car__photo'].url
         for ord in active_orders_list:
