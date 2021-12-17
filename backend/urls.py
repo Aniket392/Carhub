@@ -29,3 +29,4 @@ if settings.DEBUG:
 admin.site.site_header = "CarHub Admin"
 admin.site.site_title = "CarHub Admin Portal"
 admin.site.index_title = "Welcome to CarHub Admin Portal"
+handler404 = 'carhub.views.view_404' 

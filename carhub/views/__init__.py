@@ -10,7 +10,10 @@ from carhub.views.ride import RideCar
 from django.http.response import JsonResponse
 
 def Index(request):
-    return render(request, 'index.html')
+    return render(request, 'build/index.html')
+
+def view_404(request):
+    return render(request, 'build/index.html')
 
 def test(request):
     if request.user.is_authenticated:
