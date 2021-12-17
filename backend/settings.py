@@ -164,6 +164,7 @@ STATICFILES_DIRS = [
     # os.path.join(BASE_DIR, 'minor-project', 'build', 'static'),
     os.path.join(BASE_DIR, 'static'),
 ]
+# STATIC_ROOT =  os.path.join(BASE_DIR, 'static/')
 # print(STATICFILES_DIRS)
 
 # Default primary key field type
