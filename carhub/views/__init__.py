@@ -1,3 +1,4 @@
+from django.shortcuts import render
 from carhub.views.auth import Signin, Signout, Signup, activate
 from carhub.views.book import Book, handlerequest
 from carhub.views.dashboard import UserDashboard, CarDataAPI, BankDetails, RiderOrderDetails, ReportNow
@@ -7,6 +8,9 @@ from carhub.views.rent import RentCar, PriceCalculator
 from carhub.views.ride import RideCar
 
 from django.http.response import JsonResponse
+
+def Index(request):
+    return render(request, 'index.html')
 
 def test(request):
     if request.user.is_authenticated:
