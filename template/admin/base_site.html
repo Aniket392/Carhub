@@ -1,0 +1,19 @@
+{% extends "admin/base.html" %}
+{% load i18n static %}
+
+{% block title %}{{ title }} | {{ site_title|default:_('Django site admin') }}{% endblock %}
+
+{% block branding %}
+<h1 id="site-name">
+    <a href="{% url 'admin:index' %}">
+        <img src="{% static 'logo.png' %}" height="40px" />
+    </a>
+    <b>Hub</b>
+</h1>
+{% endblock %}
+
+{% block extrastyle %}
+     <link rel="stylesheet" type="text/css" href="{% static "admin_color.css" %}"/>
+{% endblock %}
+
+{% block nav-global %}{% endblock %}
