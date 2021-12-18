@@ -3,6 +3,7 @@ import json
 import os
 
 from django.contrib.auth.models import User
+from django.shortcuts import render
 from carhub.models import Car, Order
 from django.http.response import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -45,6 +46,7 @@ def Book(request, carid):
                 return JsonResponse({"message":"Invalid Dates"}, status = 422)
 
             car = Car.objects.get(id = carid)
+            print(request.user.id)
             order = Order(userid = request.user, car = car, orderDateFrom = fromDate, orderDateExpire = toDate, totalOrderCost = price)
             order = CreationDataSaver(order)
             order.save()
@@ -60,7 +62,7 @@ def Book(request, carid):
                 'INDUSTRY_TYPE_ID': 'Retail',
                 'WEBSITE': 'WEBSTAGING',
                 'CHANNEL_ID': 'WEB',
-                'CALLBACK_URL':'http://127.0.0.1:8000/order-status/',  #To be decided
+                'CALLBACK_URL':'http://127.0.0.1:8000/api/order-status/',  #To be decided
             }
             param_dict['CHECKSUMHASH'] = Checksum.generate_checksum(param_dict, MERCHANT_KEY)
             return JsonResponse({"param_dict":param_dict})
@@ -91,6 +93,7 @@ def handlerequest(request):
             order.status='BKD'
             order.save()
 
+            # Mail to Rider
             mail_subject = 'Ride booked on successful payment'
             message = render_to_string('orderEmail.html', {
                 'response_dict': response_dict,
@@ -103,10 +106,38 @@ def handlerequest(request):
             print(to_email,mail_subject,message,name)
             email.fail_silently = False
             email.send()
+
             # Mail to renter
-            # Details  to be sent: Car Name, Car details, Date of booking, date of start of journey, date of end of journey, contact number of rider, name of rider.
-            # Issue: If same car model , car number required??
-            # return JsonResponse({"message": "order succesful"},status=202)
+            car_name = " ".join([order.car.brand, order.car.modelName])
+            date_of_booking = order.bookingDate.date()
+            journey_start_date = order.orderDateFrom.date()
+            journey_end_date = order.orderDateExpire.date()
+            contact_number_rider = order.userid.userproxy.mobile_number
+            name_of_rider = order.userid.first_name
+            price = order.totalOrderCost
+            renter_email = order.car.user.email
+            renter_name = order.car.user.first_name
+
+            car_details = {
+                        "order_id": order.id,
+                        "name": renter_name,
+                        "car_name": car_name,
+                        "booking_date": date_of_booking,
+                        "journey_start_date": journey_start_date,
+                        "journey_end_date": journey_end_date,
+                        "contact_number_rider": contact_number_rider,
+                        "name_of_rider": name_of_rider,
+                        "price": price
+            }
+            mail_subject = 'Your car is booked'
+            message = render_to_string('renterOrderEmail.html', car_details)
+            email = EmailMessage(
+                        mail_subject, message, to=[renter_email]
+            )
+            print(renter_email,mail_subject,message)
+            email.fail_silently = False
+            email.send()
+
         else:
             print('order was not successful because' + response_dict['RESPMSG'])
             
