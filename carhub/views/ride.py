@@ -38,7 +38,7 @@ def RideCar(request, city=None):
 
             return JsonResponse({'data': car_data, 'category':cat_data})
         else:
-            city_data = list(City.objects.values('id', 'name'))
+            city_data = list(City.objects.order_by('name').values('id', 'name'))
             return JsonResponse({'data': city_data})
     else:
         return JsonResponse({'message': 'Redirect To Sign in'}, status = 302)
