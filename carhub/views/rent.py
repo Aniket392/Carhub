@@ -56,8 +56,8 @@ def RentCar(request):
             return JsonResponse({'message': "Redirect To SignIn."}, status = 302)
     else:
         context = {}
-        context['city'] = list(City.objects.values('id', 'name'))
-        context['category'] = list(Category.objects.values('id', 'name'))
+        context['city'] = list(City.objects.order_by('name').values('id', 'name'))
+        context['category'] = list(Category.objects.order_by('name').values('id', 'name'))
         if request.user.is_authenticated:
             context['userdata'] = list(Car.objects.filter(user = request.user).values())
 
