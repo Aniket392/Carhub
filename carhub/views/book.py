@@ -11,6 +11,7 @@ from carhub.utils import CreationDataSaver
 from PayTm import Checksum
 from django.template.loader import render_to_string
 from django.core.mail import EmailMessage
+from django.contrib.sites.shortcuts import get_current_site
 MERCHANT_KEY=os.environ.get('MERCHANT_KEY')
 
 @csrf_exempt
@@ -53,6 +54,7 @@ def Book(request, carid):
 
             # PAYTM Check
             # Confirm status of payment otherwise payment will be Pending in Order Table
+            domain = get_current_site(request).domain
             param_dict = {
 
                 'MID': os.environ.get('MID'),
@@ -62,7 +64,7 @@ def Book(request, carid):
                 'INDUSTRY_TYPE_ID': 'Retail',
                 'WEBSITE': 'WEBSTAGING',
                 'CHANNEL_ID': 'WEB',
-                'CALLBACK_URL':'http://127.0.0.1:8000/api/order-status/',  #To be decided
+                'CALLBACK_URL':'http://' + domain + '/api/order-status/',  #To be decided
             }
             param_dict['CHECKSUMHASH'] = Checksum.generate_checksum(param_dict, MERCHANT_KEY)
             return JsonResponse({"param_dict":param_dict})
@@ -73,6 +75,7 @@ def Book(request, carid):
 @csrf_exempt
 def handlerequest(request):
     # paytm will send you post request here
+    
     form = request.POST
     response_dict = {}
     for i in form.keys():
@@ -82,12 +85,10 @@ def handlerequest(request):
 
     verify = Checksum.verify_checksum(response_dict, MERCHANT_KEY, checksum)
     if verify:
-        print(response_dict)
         order = Order.objects.select_related('userid').get(id = response_dict['ORDERID'])
         name = order.userid.first_name
         to_email = order.userid.email
         if response_dict['RESPCODE'] == '01':
-            print('order successful')
             
             renter_contact_number = order.car.user.userproxy.mobile_number
             order.status='BKD'
@@ -103,7 +104,6 @@ def handlerequest(request):
             email = EmailMessage(
                         mail_subject, message, to=[to_email]
             )
-            print(to_email,mail_subject,message,name)
             email.fail_silently = False
             email.send()
 
