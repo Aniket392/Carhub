@@ -4,6 +4,7 @@ import os
 
 from django.contrib.auth.models import User
 from django.shortcuts import render
+from django.shortcuts import redirect
 from carhub.models import Car, Order
 from django.http.response import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -153,7 +154,7 @@ def handlerequest(request):
             )
             email.send()
             # return JsonResponse({"message": response_dict['RESPMSG']}, status=402)
-        return render(request, 'build/index.html')
+        return redirect('/')
     else:
         return JsonResponse(status=404)
     # return render(request, 'shop/paymentstatus.html', {'response': response_dict,'email':emailId})
