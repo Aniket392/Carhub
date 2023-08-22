@@ -22,6 +22,10 @@ class Category(timestamp):
 
 class City(timestamp):
     name = models.CharField(max_length=32, unique=True)
+    
+    class Meta:
+        verbose_name = ("City")
+        verbose_name_plural = ("Cities")
 
     def __str__(self):
         return self.name
@@ -47,13 +51,13 @@ class Car(timestamp):
     modelName = models.CharField(max_length=50)
     year = models.CharField(max_length=50)
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
-    details = models.ForeignKey(CarDetails, on_delete=models.CASCADE)
+    details = models.ForeignKey(CarDetails, on_delete=models.CASCADE, default=None)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     city = models.ForeignKey(City, on_delete=models.CASCADE)
     photo = CloudinaryField('img', default = None)
     # rc = CloudinaryField('rc', default = None)
     # photo = models.ImageField(upload_to = 'cars')
-    rc = models.ImageField(upload_to = 'rc')
+    rc = models.ImageField(upload_to = 'rc',default=None)
     is_valid = models.BooleanField(default=False, blank=True, null=True)
 
     def __str__(self):
@@ -69,7 +73,7 @@ class Order(timestamp):
         ('CAN', 'Cancelled'),
     ]
     userid = models.ForeignKey(User, on_delete=models.CASCADE)
-    car =  models.ForeignKey(Car, on_delete=models.CASCADE, related_name='car_detail')
+    car =  models.ForeignKey(Car, on_delete=models.CASCADE, related_name='car_detail', default=None)
     orderDateFrom =  models.DateTimeField(default = datetime.now())
     orderDateExpire =  models.DateTimeField(default = datetime.now()+ timedelta(hours=1))
     totalOrderCost = models.PositiveIntegerField()
@@ -104,7 +108,7 @@ class Report(timestamp):
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     order = models.ForeignKey(Order, on_delete=models.CASCADE)
-    issueDate = models.DateField(default=dt.date.today())
+    issueDate = models.DateField(auto_now=True)
     message = models.TextField()
     status = models.CharField(max_length=5, choices=REPORT_STATUS, default='OPEN')
     resolution = models.TextField(default=None, null=True, blank=True)
