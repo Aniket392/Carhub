@@ -97,10 +97,13 @@ def CreationDataSaver(obj):
 
 
 def DrivingLicenseDataSaver(userproxy):
-  dl = DrivingLicense(userproxy.dl)
-  if dl.is_valid():
-      userproxy.dl_no = dl.license_number()
-      first_name, last_name = dl.extract_name()
+  # dl = DrivingLicense(userproxy.dl)
+  if True:
+  # if dl.is_valid():
+      # userproxy.dl_no = dl.license_number()
+      # first_name, last_name = dl.extract_name()
+      userproxy.dl_no = "DUMMY_NUMBER"
+      first_name, last_name = "DUMMY_NAME", "DUMMY_NAME"
       userproxy.user.first_name, userproxy.user.last_name = first_name, last_name
       userproxy.is_valid_rider = True
       userproxy.user.save()
