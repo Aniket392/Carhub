@@ -19,8 +19,9 @@ from django.urls.conf import include, re_path
 from django.views.generic import TemplateView
 from django.conf import settings
 from django.conf.urls.static import static
+from backend.settings import ADMIN_URL
 urlpatterns = [
-    path('admin', admin.site.urls),
+    path(ADMIN_URL, admin.site.urls),
     path('', include('carhub.urls')),
 ]
 if settings.DEBUG:
