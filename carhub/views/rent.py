@@ -5,6 +5,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
 import joblib, pandas as pd, json
 from carhub.utils import CreationDataSaver
+from backend.settings import SCALER_PATH, ENCODER_PATH, MODEL_PATH
 
 @csrf_exempt
 def RentCar(request):   
@@ -86,9 +87,9 @@ def PriceCalculator(request):
 
     if request.method == "POST":
         #Loading Model
-        scaler = joblib.load(open("backend/scaler.pkl", "rb"))
-        labelencoder = joblib.load(open("backend/encoder.pkl", "rb"))
-        model = joblib.load(open("backend/model.pkl", "rb"))
+        scaler = joblib.load(open(SCALER_PATH, "rb"))
+        labelencoder = joblib.load(open(ENCODER_PATH, "rb"))
+        model = joblib.load(open(MODEL_PATH, "rb"))
 
         #Extracting from Form
         year = request.POST.get('year', None)

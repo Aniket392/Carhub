@@ -173,6 +173,11 @@ MEDIA_URL = '/media/'
 # Path where media is stored
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
 
+BAS_MODEL_DIR = os.path.join(BASE_DIR, 'backend/')
+SCALER_PATH = os.path.join(BAS_MODEL_DIR, 'scaler.pkl')
+ENCODER_PATH = os.path.join(BAS_MODEL_DIR, 'encoder.pkl')
+MODEL_PATH = os.path.join(BAS_MODEL_DIR, 'model.pkl')
+
 
 # EMail Verification
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
